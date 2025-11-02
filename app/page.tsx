@@ -22,6 +22,7 @@ import {
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 import { useTableSort } from '@/hooks/use-table-sort';
+import { PayrollCardView } from '@/components/payroll/payroll-card-view';
 
 interface PayrollPeriod {
   id: number;
@@ -161,15 +162,15 @@ export default function Dashboard() {
   return (
     <div className="space-y-4">
       {/* Compact Header with Period Selector */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-4 text-white shadow-lg">
-        <div className="flex items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-4 sm:p-6 text-white shadow-lg">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">ระบบคำนวณเงินเดือน</h1>
+            <h1 className="text-xl sm:text-2xl font-bold">ระบบคำนวณเงินเดือน</h1>
             <p className="mt-1 text-sm text-blue-100">
               ภาพรวมข้อมูลเงินเดือนพนักงาน
             </p>
           </div>
-          <div className="w-80">
+          <div className="w-full lg:w-80">
             <PeriodSelector
               selectedPeriod={selectedPeriod}
               onPeriodChange={setSelectedPeriod}
@@ -206,7 +207,17 @@ export default function Dashboard() {
                 <EmployeeSearch onSearch={setSearchTerm} />
               </div>
 
-              <div className="border rounded-lg overflow-hidden">
+              {/* Mobile Card View */}
+              <div className="block md:hidden max-h-[500px] overflow-y-auto">
+                <PayrollCardView
+                  data={sortedData}
+                  isLoading={isLoading}
+                  searchTerm={searchTerm}
+                />
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block border rounded-lg overflow-hidden">
                 <div className="max-h-[500px] overflow-y-auto relative">
                   <Table>
                     <TableHeader className="sticky top-0 bg-gray-50 z-10 shadow-sm">

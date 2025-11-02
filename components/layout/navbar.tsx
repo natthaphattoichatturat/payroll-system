@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { MobileNav } from './mobile-nav';
 import {
   LayoutDashboard,
   Users,
@@ -25,16 +26,19 @@ export function Navbar() {
   const pathname = usePathname();
 
   return (
-    <nav className="bg-white border-b border-gray-200">
+    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 justify-between">
-          <div className="flex">
+        <div className="flex h-16 justify-between items-center">
+          <div className="flex items-center gap-3">
+            <MobileNav />
             <div className="flex flex-shrink-0 items-center">
-              <h1 className="text-2xl font-bold text-blue-600">
+              <h1 className="text-lg sm:text-2xl font-bold text-blue-600">
                 Payroll System
               </h1>
             </div>
-            <div className="hidden sm:ml-8 sm:flex sm:space-x-8">
+          </div>
+          <div className="flex">
+            <div className="hidden lg:ml-8 lg:flex lg:space-x-6">
               {navigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
