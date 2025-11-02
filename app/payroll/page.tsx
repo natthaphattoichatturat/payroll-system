@@ -5,12 +5,14 @@ import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
+import { SortableTableHeader } from '@/components/ui/sortable-table-header';
 import { PeriodSelector } from '@/components/shared/period-selector';
 import { EmployeeSearch } from '@/components/shared/employee-search';
 import { Calculator, Download, FileText, DollarSign, Users, Calendar, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatCurrency } from '@/lib/utils';
+import { useTableSort } from '@/hooks/use-table-sort';
 
 interface PayrollPeriod {
   id: number;
@@ -120,6 +122,9 @@ function PayrollContent() {
     );
     setFilteredCalculations(filtered);
   };
+
+  // Use table sort hook
+  const { sortedData, handleSort, getSortIcon, clearSort } = useTableSort(filteredCalculations);
 
   const handleCreatePeriod = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -298,37 +303,58 @@ function PayrollContent() {
 
               {/* Table Container with Scroll */}
               <div className="border rounded-lg overflow-hidden">
-                <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                <div className="overflow-x-auto max-h-[600px] overflow-y-auto relative">
                   <Table>
-                    <TableHeader className="sticky top-0 bg-gray-100 z-10">
-                      <TableRow>
-                        <TableHead className="font-bold">รหัสพนักงาน</TableHead>
-                        <TableHead className="font-bold">ชื่อ-นามสกุล</TableHead>
-                        <TableHead className="font-bold">แผนก</TableHead>
-                        <TableHead className="text-right font-bold">วันทำงาน</TableHead>
-                        <TableHead className="text-right font-bold">ชม. OT</TableHead>
-                        <TableHead className="text-right font-bold">เงินฐาน</TableHead>
-                        <TableHead className="text-right font-bold">ค่า OT</TableHead>
-                        <TableHead className="text-right font-bold">Gross</TableHead>
-                        <TableHead className="text-right font-bold">ภาษี</TableHead>
-                        <TableHead className="text-right font-bold">ประกันสังคม</TableHead>
-                        <TableHead className="text-right font-bold">Net</TableHead>
-                        <TableHead className="font-bold"></TableHead>
+                    <TableHeader className="sticky top-0 bg-gray-100 z-10 shadow-sm">
+                      <TableRow className="group">
+                        <SortableTableHeader columnKey="employee_id" onSort={handleSort} getSortIcon={getSortIcon}>
+                          รหัสพนักงาน
+                        </SortableTableHeader>
+                        <SortableTableHeader columnKey="employees.name" onSort={handleSort} getSortIcon={getSortIcon}>
+                          ชื่อ-นามสกุล
+                        </SortableTableHeader>
+                        <SortableTableHeader columnKey="employees.department" onSort={handleSort} getSortIcon={getSortIcon}>
+                          แผนก
+                        </SortableTableHeader>
+                        <SortableTableHeader columnKey="total_days" onSort={handleSort} getSortIcon={getSortIcon} align="right">
+                          วันทำงาน
+                        </SortableTableHeader>
+                        <SortableTableHeader columnKey="total_ot_hours" onSort={handleSort} getSortIcon={getSortIcon} align="right">
+                          ชม. OT
+                        </SortableTableHeader>
+                        <SortableTableHeader columnKey="base_salary" onSort={handleSort} getSortIcon={getSortIcon} align="right">
+                          เงินฐาน
+                        </SortableTableHeader>
+                        <SortableTableHeader columnKey="ot_amount" onSort={handleSort} getSortIcon={getSortIcon} align="right">
+                          ค่า OT
+                        </SortableTableHeader>
+                        <SortableTableHeader columnKey="gross_salary" onSort={handleSort} getSortIcon={getSortIcon} align="right">
+                          Gross
+                        </SortableTableHeader>
+                        <SortableTableHeader columnKey="tax_amount" onSort={handleSort} getSortIcon={getSortIcon} align="right">
+                          ภาษี
+                        </SortableTableHeader>
+                        <SortableTableHeader columnKey="social_security" onSort={handleSort} getSortIcon={getSortIcon} align="right">
+                          ประกันสังคม
+                        </SortableTableHeader>
+                        <SortableTableHeader columnKey="net_salary" onSort={handleSort} getSortIcon={getSortIcon} align="right">
+                          Net
+                        </SortableTableHeader>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {isLoadingData ? (
                         <TableRow>
-                          <TableCell colSpan={12} className="text-center py-12 text-gray-500">
+                          <TableCell colSpan={11} className="text-center py-12 text-gray-500">
                             <div className="flex flex-col items-center gap-2">
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                               <p>กำลังโหลดข้อมูล...</p>
                             </div>
                           </TableCell>
                         </TableRow>
-                      ) : filteredCalculations.length === 0 ? (
+                      ) : sortedData.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={12} className="text-center py-12">
+                          <TableCell colSpan={11} className="text-center py-12">
                             <Users className="h-12 w-12 text-gray-300 mx-auto mb-2" />
                             <p className="text-gray-500 font-medium">
                               {searchTerm ? 'ไม่พบข้อมูลที่ค้นหา' : 'ยังไม่มีข้อมูลเงินเดือน'}
@@ -341,7 +367,7 @@ function PayrollContent() {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        filteredCalculations.map((calc) => (
+                        sortedData.map((calc) => (
                           <TableRow key={calc.id} className="hover:bg-green-50 transition-colors">
                             <TableCell className="font-semibold text-gray-900">
                               {calc.employee_id}
@@ -375,11 +401,6 @@ function PayrollContent() {
                             </TableCell>
                             <TableCell className="text-right font-bold text-green-600 text-base">
                               {formatCurrency(calc.net_salary)}
-                            </TableCell>
-                            <TableCell>
-                              <Button size="sm" variant="outline" className="h-8">
-                                <FileText className="h-4 w-4" />
-                              </Button>
                             </TableCell>
                           </TableRow>
                         ))

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
+import { SortableTableHeader } from '@/components/ui/sortable-table-header';
 import { PeriodSelector } from '@/components/shared/period-selector';
 import { EmployeeSearch } from '@/components/shared/employee-search';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
+import { useTableSort } from '@/hooks/use-table-sort';
 
 interface PayrollPeriod {
   id: number;
@@ -141,6 +143,9 @@ export default function Dashboard() {
     setFilteredCalculations(filtered);
   };
 
+  // Use table sort hook
+  const { sortedData, handleSort, getSortIcon, clearSort } = useTableSort(filteredCalculations);
+
   const toggleDeptSort = () => {
     setDeptSortAsc(!deptSortAsc);
   };
@@ -201,17 +206,64 @@ export default function Dashboard() {
                 <EmployeeSearch onSearch={setSearchTerm} />
               </div>
 
-              <div className="max-h-[500px] overflow-y-auto border rounded-lg">
-                <Table>
-                  <TableHeader className="sticky top-0 bg-gray-50 z-10">
-                    <TableRow>
-                      <TableHead>รหัส</TableHead>
-                      <TableHead>ชื่อ-นามสกุล</TableHead>
-                      <TableHead>แผนก</TableHead>
-                      <TableHead className="text-right">OT (ชม.)</TableHead>
-                      <TableHead className="text-right">ค่า OT</TableHead>
-                      <TableHead className="text-right">Gross</TableHead>
-                      <TableHead className="text-right">Net</TableHead>
+              <div className="border rounded-lg overflow-hidden">
+                <div className="max-h-[500px] overflow-y-auto relative">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-gray-50 z-10 shadow-sm">
+                      <TableRow className="group">
+                      <SortableTableHeader
+                        columnKey="employee_id"
+                        onSort={handleSort}
+                        getSortIcon={getSortIcon}
+                      >
+                        รหัส
+                      </SortableTableHeader>
+                      <SortableTableHeader
+                        columnKey="employees.name"
+                        onSort={handleSort}
+                        getSortIcon={getSortIcon}
+                      >
+                        ชื่อ-นามสกุล
+                      </SortableTableHeader>
+                      <SortableTableHeader
+                        columnKey="employees.department"
+                        onSort={handleSort}
+                        getSortIcon={getSortIcon}
+                      >
+                        แผนก
+                      </SortableTableHeader>
+                      <SortableTableHeader
+                        columnKey="total_ot_hours"
+                        onSort={handleSort}
+                        getSortIcon={getSortIcon}
+                        align="right"
+                      >
+                        OT (ชม.)
+                      </SortableTableHeader>
+                      <SortableTableHeader
+                        columnKey="ot_amount"
+                        onSort={handleSort}
+                        getSortIcon={getSortIcon}
+                        align="right"
+                      >
+                        ค่า OT
+                      </SortableTableHeader>
+                      <SortableTableHeader
+                        columnKey="gross_salary"
+                        onSort={handleSort}
+                        getSortIcon={getSortIcon}
+                        align="right"
+                      >
+                        Gross
+                      </SortableTableHeader>
+                      <SortableTableHeader
+                        columnKey="net_salary"
+                        onSort={handleSort}
+                        getSortIcon={getSortIcon}
+                        align="right"
+                      >
+                        Net
+                      </SortableTableHeader>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -221,14 +273,14 @@ export default function Dashboard() {
                           กำลังโหลดข้อมูล...
                         </TableCell>
                       </TableRow>
-                    ) : filteredCalculations.length === 0 ? (
+                    ) : sortedData.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                           {searchTerm ? 'ไม่พบข้อมูลที่ค้นหา' : 'ยังไม่มีข้อมูล'}
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredCalculations.map((calc) => (
+                      sortedData.map((calc) => (
                         <TableRow key={calc.id} className="hover:bg-blue-50">
                           <TableCell className="font-medium">{calc.employee_id}</TableCell>
                           <TableCell className="font-medium">{calc.employees?.name}</TableCell>
@@ -254,6 +306,7 @@ export default function Dashboard() {
                     )}
                   </TableBody>
                 </Table>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -417,7 +470,7 @@ export default function Dashboard() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  <div className="space-y-3">
+                  <div className="max-h-[400px] overflow-y-auto space-y-3 pr-2">
                     {sortedDeptAvg.map((dept) => (
                       <div key={dept.department} className="p-3 bg-gray-50 rounded-lg hover:bg-purple-50 transition-colors">
                         <div className="flex items-center justify-between mb-2">
