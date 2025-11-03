@@ -8,14 +8,25 @@ export async function POST(request: NextRequest) {
   try {
     const { period_id, start_date, end_date } = await request.json();
 
-    if (!start_date || !end_date) {
+    if (!period_id || !start_date || !end_date) {
       return NextResponse.json(
-        { error: 'Start date and end date required' },
+        { error: 'period_id, start_date and end_date required' },
         { status: 400 }
       );
     }
 
-    // Get all employees
+    // 1. คำนวณ daily attendance ก่อน
+    const dailyAttendanceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/daily-attendance/calculate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ period_id }),
+    });
+
+    if (!dailyAttendanceResponse.ok) {
+      console.error('Failed to calculate daily attendance');
+    }
+
+    // 2. Get all employees
     const { data: employees, error: empError } = await supabase
       .from('employees')
       .select('*');
@@ -25,40 +36,24 @@ export async function POST(request: NextRequest) {
     const payrollRecords = [];
 
     for (const employee of employees!) {
-      // Get daily attendance for the period
-      const { data: attendance, error: attError } = await supabase
+      // 3. Get daily attendance summary from daily_attendance table
+      const { data: dailyAtt, error: attError } = await supabase
         .from('daily_attendance')
         .select('*')
         .eq('employee_id', employee.employee_id)
-        .gte('work_date', start_date)
-        .lte('work_date', end_date);
+        .eq('period_id', period_id)
+        .single();
 
       if (attError) {
-        console.error(`Error getting attendance for ${employee.employee_id}:`, attError);
+        console.error(`Error getting daily attendance for ${employee.employee_id}:`, attError);
         continue;
       }
 
-      // Calculate totals
-      let total_days = 0;
-      let total_hours = 0;
-      let regular_ot_hours = 0;
-      let holiday_ot_hours = 0;
-
-      for (const day of attendance!) {
-        if (day.check_in_time || day.check_out_time) {
-          total_days++;
-          total_hours += day.actual_hours || 0;
-
-          if (day.is_holiday) {
-            // Sunday OT multiplied by 3
-            holiday_ot_hours += day.ot_hours * 3;
-          } else {
-            regular_ot_hours += day.ot_hours;
-          }
-        }
-      }
-
-      const total_ot_hours = regular_ot_hours + holiday_ot_hours;
+      // Calculate totals from daily_attendance
+      let total_days = dailyAtt?.total_work_days || 0;
+      let regular_ot_hours = dailyAtt?.regular_ot_hours || 0;
+      let holiday_ot_hours = dailyAtt?.sunday_ot_calculated || 0;
+      let total_ot_hours = dailyAtt?.total_ot_hours || 0;
       const base_salary = employee.base_salary;
       const ot_amount = total_ot_hours * employee.ot_rate;
       const gross_salary = base_salary + ot_amount;
@@ -75,7 +70,7 @@ export async function POST(request: NextRequest) {
         employee_id: employee.employee_id,
         payroll_period_id: period_id,
         total_days,
-        total_hours,
+        total_hours: 0, // Not tracking total hours anymore
         regular_ot_hours,
         holiday_ot_hours,
         total_ot_hours,

@@ -54,6 +54,9 @@ export function useLanguage() {
 // Translations object
 const translations: Record<Language, Record<string, string>> = {
   th: {
+    // Language
+    'lang.code': 'th',
+
     // Navigation
     'nav.home': 'หน้าแรก',
     'nav.employees': 'พนักงาน',
@@ -83,6 +86,8 @@ const translations: Record<Language, Record<string, string>> = {
     'payroll.empId': 'รหัส',
     'payroll.name': 'ชื่อ-นามสกุล',
     'payroll.department': 'แผนก',
+    'payroll.day': 'วันที่',
+    'payroll.totalOT': 'OT รวม',
     'payroll.otHours': 'OT (ชม.)',
     'payroll.otAmount': 'ค่า OT',
     'payroll.gross': 'Gross',
@@ -151,6 +156,9 @@ const translations: Record<Language, Record<string, string>> = {
     'leavePage.allLeaves': 'ประวัติการลาทั้งหมด',
   },
   en: {
+    // Language
+    'lang.code': 'en',
+
     // Navigation
     'nav.home': 'Home',
     'nav.employees': 'Employees',
@@ -180,6 +188,8 @@ const translations: Record<Language, Record<string, string>> = {
     'payroll.empId': 'ID',
     'payroll.name': 'Name',
     'payroll.department': 'Department',
+    'payroll.day': 'Day',
+    'payroll.totalOT': 'Total OT',
     'payroll.otHours': 'OT (hrs)',
     'payroll.otAmount': 'OT Amount',
     'payroll.gross': 'Gross',
@@ -248,6 +258,9 @@ const translations: Record<Language, Record<string, string>> = {
     'leavePage.allLeaves': 'All Leave Records',
   },
   cn: {
+    // Language
+    'lang.code': 'cn',
+
     // Navigation
     'nav.home': '首页',
     'nav.employees': '员工',
@@ -277,6 +290,8 @@ const translations: Record<Language, Record<string, string>> = {
     'payroll.empId': '工号',
     'payroll.name': '姓名',
     'payroll.department': '部门',
+    'payroll.day': '日',
+    'payroll.totalOT': '总加班',
     'payroll.otHours': '加班（小时）',
     'payroll.otAmount': '加班费',
     'payroll.gross': '毛薪',

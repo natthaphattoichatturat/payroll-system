@@ -25,6 +25,7 @@ import { formatCurrency } from '@/lib/utils';
 import { useTableSort } from '@/hooks/use-table-sort';
 import { PayrollCardView } from '@/components/payroll/payroll-card-view';
 import { useLanguage } from '@/contexts/language-context';
+import { getDayColor, parseDate, getDayName } from '@/lib/date-utils';
 
 interface PayrollPeriod {
   id: number;
@@ -33,6 +34,13 @@ interface PayrollPeriod {
   end_date: string;
   payment_date: string;
   status: string;
+}
+
+interface DayData {
+  date: string;
+  ot_hours: number;
+  is_sunday: boolean;
+  actual_ot: number;
 }
 
 interface PayrollCalculation {
@@ -47,6 +55,26 @@ interface PayrollCalculation {
     name: string;
     department: string;
   };
+  daily_attendance?: {
+    day1?: DayData | null;
+    day2?: DayData | null;
+    day3?: DayData | null;
+    day4?: DayData | null;
+    day5?: DayData | null;
+    day6?: DayData | null;
+    day7?: DayData | null;
+    day8?: DayData | null;
+    day9?: DayData | null;
+    day10?: DayData | null;
+    day11?: DayData | null;
+    day12?: DayData | null;
+    day13?: DayData | null;
+    day14?: DayData | null;
+    day15?: DayData | null;
+    total_ot_hours?: number;
+    regular_ot_hours?: number;
+    sunday_ot_calculated?: number;
+  } | null;
 }
 
 interface Stats {
@@ -271,8 +299,8 @@ export default function Dashboard() {
 
               {/* Desktop Table View */}
               <div className="hidden md:block border rounded-lg overflow-hidden">
-                <div className="max-h-[500px] overflow-y-auto relative">
-                  <Table>
+                <div className="max-h-[500px] overflow-x-auto overflow-y-auto relative">
+                  <Table className="min-w-[1800px]">
                     <TableHeader className="sticky top-0 bg-gray-50 z-10 shadow-sm">
                       <TableRow className="group">
                       <SortableTableHeader
@@ -296,50 +324,50 @@ export default function Dashboard() {
                       >
                         {t('payroll.department')}
                       </SortableTableHeader>
+                      {/* 15 Day Columns */}
+                      {Array.from({ length: 15 }, (_, i) => {
+                        const dayKey = `day${i + 1}` as keyof typeof sortedData[0]['daily_attendance'];
+                        const sampleDayData = sortedData[0]?.daily_attendance?.[dayKey] as DayData | null | undefined;
+                        const date = sampleDayData?.date;
+
+                        let bgColor = 'bg-white';
+                        let dayName = '';
+                        let dayNum = i + 11; // Days 11-25 for first half
+
+                        if (date) {
+                          const { year, month, day } = parseDate(date);
+                          bgColor = getDayColor(year, month, day);
+                          dayName = getDayName(year, month, day, t('lang.code') as 'th' | 'en' | 'cn');
+                          dayNum = day;
+                        }
+
+                        return (
+                          <TableCell key={i} className={`text-center font-semibold text-xs ${bgColor} border-l`}>
+                            <div>{t('payroll.day')} {dayNum}</div>
+                            {dayName && <div className="text-[10px] text-gray-500">{dayName}</div>}
+                          </TableCell>
+                        );
+                      })}
                       <SortableTableHeader
                         columnKey="total_ot_hours"
                         onSort={handleSort}
                         getSortIcon={getSortIcon}
                         align="right"
                       >
-                        {t('payroll.otHours')}
-                      </SortableTableHeader>
-                      <SortableTableHeader
-                        columnKey="ot_amount"
-                        onSort={handleSort}
-                        getSortIcon={getSortIcon}
-                        align="right"
-                      >
-                        {t('payroll.otAmount')}
-                      </SortableTableHeader>
-                      <SortableTableHeader
-                        columnKey="gross_salary"
-                        onSort={handleSort}
-                        getSortIcon={getSortIcon}
-                        align="right"
-                      >
-                        {t('payroll.gross')}
-                      </SortableTableHeader>
-                      <SortableTableHeader
-                        columnKey="net_salary"
-                        onSort={handleSort}
-                        getSortIcon={getSortIcon}
-                        align="right"
-                      >
-                        {t('payroll.net')}
+                        {t('payroll.totalOT')}
                       </SortableTableHeader>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {isLoading ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                        <TableCell colSpan={19} className="text-center py-8 text-gray-500">
                           {t('payroll.loading')}
                         </TableCell>
                       </TableRow>
                     ) : sortedData.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                        <TableCell colSpan={19} className="text-center py-8 text-gray-500">
                           {searchTerm ? t('payroll.noResults') : t('payroll.noData')}
                         </TableCell>
                       </TableRow>
@@ -353,17 +381,32 @@ export default function Dashboard() {
                               {calc.employees?.department}
                             </span>
                           </TableCell>
-                          <TableCell className="text-right font-semibold text-blue-600">
-                            {calc.total_ot_hours.toFixed(1)}
-                          </TableCell>
-                          <TableCell className="text-right text-blue-600">
-                            {formatCurrency(calc.ot_amount)}
-                          </TableCell>
-                          <TableCell className="text-right font-semibold">
-                            {formatCurrency(calc.gross_salary)}
-                          </TableCell>
-                          <TableCell className="text-right font-bold text-green-600">
-                            {formatCurrency(calc.net_salary)}
+                          {/* 15 Day Cells */}
+                          {Array.from({ length: 15 }, (_, i) => {
+                            const dayKey = `day${i + 1}` as keyof typeof calc['daily_attendance'];
+                            const dayData = calc.daily_attendance?.[dayKey] as DayData | null | undefined;
+                            const otHours = dayData?.actual_ot || 0;
+
+                            let bgColor = 'bg-white';
+                            if (dayData?.date) {
+                              const { year, month, day } = parseDate(dayData.date);
+                              bgColor = getDayColor(year, month, day);
+                            }
+
+                            return (
+                              <TableCell key={i} className={`text-center text-sm ${bgColor} border-l`}>
+                                {otHours > 0 ? (
+                                  <span className={dayData?.is_sunday ? 'font-bold text-red-600' : 'text-gray-700'}>
+                                    {otHours.toFixed(1)}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">-</span>
+                                )}
+                              </TableCell>
+                            );
+                          })}
+                          <TableCell className="text-right font-bold text-blue-600 border-l">
+                            {calc.daily_attendance?.total_ot_hours?.toFixed(1) || '0.0'}
                           </TableCell>
                         </TableRow>
                       ))

@@ -13,6 +13,8 @@ import { Calculator, Download, FileText, DollarSign, Users, Calendar, TrendingUp
 import toast from 'react-hot-toast';
 import { formatCurrency } from '@/lib/utils';
 import { useTableSort } from '@/hooks/use-table-sort';
+import { getDayColor, parseDate, getDayName } from '@/lib/date-utils';
+import { useLanguage } from '@/contexts/language-context';
 
 interface PayrollPeriod {
   id: number;
@@ -21,6 +23,13 @@ interface PayrollPeriod {
   end_date: string;
   payment_date: string;
   status: string;
+}
+
+interface DayData {
+  date: string;
+  ot_hours: number;
+  is_sunday: boolean;
+  actual_ot: number;
 }
 
 interface PayrollCalculation {
@@ -41,9 +50,30 @@ interface PayrollCalculation {
     name: string;
     department: string;
   };
+  daily_attendance?: {
+    day1?: DayData | null;
+    day2?: DayData | null;
+    day3?: DayData | null;
+    day4?: DayData | null;
+    day5?: DayData | null;
+    day6?: DayData | null;
+    day7?: DayData | null;
+    day8?: DayData | null;
+    day9?: DayData | null;
+    day10?: DayData | null;
+    day11?: DayData | null;
+    day12?: DayData | null;
+    day13?: DayData | null;
+    day14?: DayData | null;
+    day15?: DayData | null;
+    total_ot_hours?: number;
+    regular_ot_hours?: number;
+    sunday_ot_calculated?: number;
+  } | null;
 }
 
 function PayrollContent() {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const urlPeriodId = searchParams.get('period_id');
 
@@ -304,60 +334,68 @@ function PayrollContent() {
               {/* Table Container with Scroll */}
               <div className="border rounded-lg overflow-hidden">
                 <div className="overflow-x-auto max-h-[600px] overflow-y-auto relative">
-                  <Table>
+                  <Table className="min-w-[1800px]">
                     <TableHeader className="sticky top-0 bg-gray-100 z-10 shadow-sm">
                       <TableRow className="group">
                         <SortableTableHeader columnKey="employee_id" onSort={handleSort} getSortIcon={getSortIcon}>
-                          รหัสพนักงาน
+                          {t('payroll.empId')}
                         </SortableTableHeader>
                         <SortableTableHeader columnKey="employees.name" onSort={handleSort} getSortIcon={getSortIcon}>
-                          ชื่อ-นามสกุล
+                          {t('payroll.name')}
                         </SortableTableHeader>
                         <SortableTableHeader columnKey="employees.department" onSort={handleSort} getSortIcon={getSortIcon}>
-                          แผนก
+                          {t('payroll.department')}
                         </SortableTableHeader>
-                        <SortableTableHeader columnKey="total_days" onSort={handleSort} getSortIcon={getSortIcon} align="right">
-                          วันทำงาน
-                        </SortableTableHeader>
-                        <SortableTableHeader columnKey="total_ot_hours" onSort={handleSort} getSortIcon={getSortIcon} align="right">
-                          ชม. OT
-                        </SortableTableHeader>
-                        <SortableTableHeader columnKey="base_salary" onSort={handleSort} getSortIcon={getSortIcon} align="right">
-                          เงินฐาน
-                        </SortableTableHeader>
-                        <SortableTableHeader columnKey="ot_amount" onSort={handleSort} getSortIcon={getSortIcon} align="right">
-                          ค่า OT
-                        </SortableTableHeader>
-                        <SortableTableHeader columnKey="gross_salary" onSort={handleSort} getSortIcon={getSortIcon} align="right">
-                          Gross
-                        </SortableTableHeader>
-                        <SortableTableHeader columnKey="tax_amount" onSort={handleSort} getSortIcon={getSortIcon} align="right">
-                          ภาษี
-                        </SortableTableHeader>
-                        <SortableTableHeader columnKey="social_security" onSort={handleSort} getSortIcon={getSortIcon} align="right">
-                          ประกันสังคม
-                        </SortableTableHeader>
-                        <SortableTableHeader columnKey="net_salary" onSort={handleSort} getSortIcon={getSortIcon} align="right">
-                          Net
+                        {/* 15 Day Columns */}
+                        {Array.from({ length: 15 }, (_, i) => {
+                          const dayKey = `day${i + 1}` as keyof typeof sortedData[0]['daily_attendance'];
+                          const sampleDayData = sortedData[0]?.daily_attendance?.[dayKey] as DayData | null | undefined;
+                          const date = sampleDayData?.date;
+
+                          let bgColor = 'bg-white';
+                          let dayName = '';
+                          let dayNum = i + 11; // Days 11-25 for first half
+
+                          if (date) {
+                            const { year, month, day } = parseDate(date);
+                            bgColor = getDayColor(year, month, day);
+                            dayName = getDayName(year, month, day, t('lang.code') as 'th' | 'en' | 'cn');
+                            dayNum = day;
+                          }
+
+                          return (
+                            <TableCell key={i} className={`text-center font-semibold text-xs ${bgColor} border-l`}>
+                              <div>{t('payroll.day')} {dayNum}</div>
+                              {dayName && <div className="text-[10px] text-gray-500">{dayName}</div>}
+                            </TableCell>
+                          );
+                        })}
+                        <SortableTableHeader
+                          columnKey="total_ot_hours"
+                          onSort={handleSort}
+                          getSortIcon={getSortIcon}
+                          align="right"
+                        >
+                          {t('payroll.totalOT')}
                         </SortableTableHeader>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {isLoadingData ? (
                         <TableRow>
-                          <TableCell colSpan={11} className="text-center py-12 text-gray-500">
+                          <TableCell colSpan={19} className="text-center py-12 text-gray-500">
                             <div className="flex flex-col items-center gap-2">
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                              <p>กำลังโหลดข้อมูล...</p>
+                              <p>{t('payroll.loading')}</p>
                             </div>
                           </TableCell>
                         </TableRow>
                       ) : sortedData.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={11} className="text-center py-12">
+                          <TableCell colSpan={19} className="text-center py-12">
                             <Users className="h-12 w-12 text-gray-300 mx-auto mb-2" />
                             <p className="text-gray-500 font-medium">
-                              {searchTerm ? 'ไม่พบข้อมูลที่ค้นหา' : 'ยังไม่มีข้อมูลเงินเดือน'}
+                              {searchTerm ? t('payroll.noResults') : t('payroll.noData')}
                             </p>
                             {!searchTerm && calculations.length === 0 && (
                               <p className="text-sm text-gray-400 mt-1">
@@ -380,27 +418,32 @@ function PayrollContent() {
                                 {calc.employees?.department}
                               </span>
                             </TableCell>
-                            <TableCell className="text-right font-medium">{calc.total_days}</TableCell>
-                            <TableCell className="text-right font-semibold text-blue-600">
-                              {calc.total_ot_hours.toFixed(1)}
-                            </TableCell>
-                            <TableCell className="text-right font-medium text-gray-900">
-                              {formatCurrency(calc.base_salary)}
-                            </TableCell>
-                            <TableCell className="text-right font-semibold text-blue-600">
-                              {formatCurrency(calc.ot_amount)}
-                            </TableCell>
-                            <TableCell className="text-right font-bold text-purple-600">
-                              {formatCurrency(calc.gross_salary)}
-                            </TableCell>
-                            <TableCell className="text-right font-medium text-red-600">
-                              -{formatCurrency(calc.tax_amount)}
-                            </TableCell>
-                            <TableCell className="text-right font-medium text-red-600">
-                              -{formatCurrency(calc.social_security)}
-                            </TableCell>
-                            <TableCell className="text-right font-bold text-green-600 text-base">
-                              {formatCurrency(calc.net_salary)}
+                            {/* 15 Day Cells */}
+                            {Array.from({ length: 15 }, (_, i) => {
+                              const dayKey = `day${i + 1}` as keyof typeof calc['daily_attendance'];
+                              const dayData = calc.daily_attendance?.[dayKey] as DayData | null | undefined;
+                              const otHours = dayData?.actual_ot || 0;
+
+                              let bgColor = 'bg-white';
+                              if (dayData?.date) {
+                                const { year, month, day } = parseDate(dayData.date);
+                                bgColor = getDayColor(year, month, day);
+                              }
+
+                              return (
+                                <TableCell key={i} className={`text-center text-sm ${bgColor} border-l`}>
+                                  {otHours > 0 ? (
+                                    <span className={dayData?.is_sunday ? 'font-bold text-red-600' : 'text-gray-700'}>
+                                      {otHours.toFixed(1)}
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-400">-</span>
+                                  )}
+                                </TableCell>
+                              );
+                            })}
+                            <TableCell className="text-right font-bold text-blue-600 text-base border-l">
+                              {calc.daily_attendance?.total_ot_hours?.toFixed(1) || '0.0'}
                             </TableCell>
                           </TableRow>
                         ))
