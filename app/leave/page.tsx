@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DateRangePicker } from '@/components/shared/date-range-picker';
 import { Search, Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Employee } from '@/lib/supabase';
@@ -23,6 +24,7 @@ interface LeaveRecord {
 
 export default function LeavePage() {
   const [leaves, setLeaves] = useState<LeaveRecord[]>([]);
+  const [filteredLeaves, setFilteredLeaves] = useState<LeaveRecord[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
@@ -32,6 +34,9 @@ export default function LeavePage() {
   const [leaveDate, setLeaveDate] = useState('');
   const [leaveType, setLeaveType] = useState('Personal');
   const [reason, setReason] = useState('');
+
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
 
   useEffect(() => {
     fetchLeaves();
@@ -51,6 +56,10 @@ export default function LeavePage() {
       setShowEmployeeList(false);
     }
   }, [searchTerm, employees]);
+
+  useEffect(() => {
+    filterLeaves();
+  }, [leaves, filterStartDate, filterEndDate]);
 
   const fetchLeaves = async () => {
     try {
@@ -132,6 +141,25 @@ export default function LeavePage() {
     } catch (error: any) {
       toast.error(error.message);
     }
+  };
+
+  const filterLeaves = () => {
+    let filtered = [...leaves];
+
+    // Filter by date range
+    if (filterStartDate) {
+      filtered = filtered.filter(
+        (leave) => new Date(leave.leave_date) >= new Date(filterStartDate)
+      );
+    }
+
+    if (filterEndDate) {
+      filtered = filtered.filter(
+        (leave) => new Date(leave.leave_date) <= new Date(filterEndDate)
+      );
+    }
+
+    setFilteredLeaves(filtered);
   };
 
   return (
@@ -302,6 +330,24 @@ export default function LeavePage() {
           <CardTitle>ประวัติการลาทั้งหมด</CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Date Range Filter */}
+          <div className="mb-4 flex items-center gap-3">
+            <DateRangePicker
+              startDate={filterStartDate}
+              endDate={filterEndDate}
+              onStartDateChange={setFilterStartDate}
+              onEndDateChange={setFilterEndDate}
+              onClear={() => {
+                setFilterStartDate('');
+                setFilterEndDate('');
+              }}
+            />
+            <div className="text-sm text-gray-600">
+              แสดง {filteredLeaves.length} รายการ
+              {(filterStartDate || filterEndDate) && ` (จากทั้งหมด ${leaves.length} รายการ)`}
+            </div>
+          </div>
+
           <Table>
             <TableHeader>
               <TableRow>
@@ -315,14 +361,14 @@ export default function LeavePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {leaves.length === 0 ? (
+              {filteredLeaves.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                    ไม่มีรายการลา
+                    {leaves.length === 0 ? 'ไม่มีรายการลา' : 'ไม่พบรายการลาในช่วงเวลาที่เลือก'}
                   </TableCell>
                 </TableRow>
               ) : (
-                leaves.map((leave) => (
+                filteredLeaves.map((leave) => (
                   <TableRow key={leave.id}>
                     <TableCell className="font-medium">
                       {new Date(leave.leave_date).toLocaleDateString('th-TH')}

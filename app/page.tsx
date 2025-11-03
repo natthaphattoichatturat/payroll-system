@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components
 import { SortableTableHeader } from '@/components/ui/sortable-table-header';
 import { PeriodSelector } from '@/components/shared/period-selector';
 import { EmployeeSearch } from '@/components/shared/employee-search';
+import { DateRangePicker } from '@/components/shared/date-range-picker';
 import { Button } from '@/components/ui/button';
 import {
   TrendingUp,
@@ -67,12 +68,28 @@ interface LeaveStats {
   total_leaves: number;
 }
 
+interface LeaveRecord {
+  id: number;
+  employee_id: string;
+  leave_date: string;
+  leave_type: string;
+  reason?: string;
+  employees?: {
+    name: string;
+    department: string;
+  };
+}
+
 export default function Dashboard() {
   const [selectedPeriod, setSelectedPeriod] = useState<PayrollPeriod | null>(null);
   const [calculations, setCalculations] = useState<PayrollCalculation[]>([]);
   const [filteredCalculations, setFilteredCalculations] = useState<PayrollCalculation[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [leaveStats, setLeaveStats] = useState<LeaveStats | null>(null);
+  const [leaveRecords, setLeaveRecords] = useState<LeaveRecord[]>([]);
+  const [filteredLeaveRecords, setFilteredLeaveRecords] = useState<LeaveRecord[]>([]);
+  const [leaveStartDate, setLeaveStartDate] = useState('');
+  const [leaveEndDate, setLeaveEndDate] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [deptSortAsc, setDeptSortAsc] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -82,12 +99,17 @@ export default function Dashboard() {
       fetchPayrollData();
       fetchStats();
       fetchLeaveStats();
+      fetchLeaveRecords();
     }
   }, [selectedPeriod]);
 
   useEffect(() => {
     filterCalculations();
   }, [calculations, searchTerm]);
+
+  useEffect(() => {
+    filterLeaveRecords();
+  }, [leaveRecords, leaveStartDate, leaveEndDate]);
 
   const fetchPayrollData = async () => {
     if (!selectedPeriod) return;
@@ -130,6 +152,16 @@ export default function Dashboard() {
     }
   };
 
+  const fetchLeaveRecords = async () => {
+    try {
+      const response = await fetch('/api/leave');
+      const data = await response.json();
+      setLeaveRecords(data);
+    } catch (error) {
+      console.error('Error fetching leave records:', error);
+    }
+  };
+
   const filterCalculations = () => {
     if (!searchTerm) {
       setFilteredCalculations(calculations);
@@ -142,6 +174,25 @@ export default function Dashboard() {
         c.employees?.name.includes(searchTerm)
     );
     setFilteredCalculations(filtered);
+  };
+
+  const filterLeaveRecords = () => {
+    let filtered = [...leaveRecords];
+
+    // Filter by date range
+    if (leaveStartDate) {
+      filtered = filtered.filter(
+        (leave) => new Date(leave.leave_date) >= new Date(leaveStartDate)
+      );
+    }
+
+    if (leaveEndDate) {
+      filtered = filtered.filter(
+        (leave) => new Date(leave.leave_date) <= new Date(leaveEndDate)
+      );
+    }
+
+    setFilteredLeaveRecords(filtered);
   };
 
   // Use table sort hook
@@ -317,6 +368,112 @@ export default function Dashboard() {
                     )}
                   </TableBody>
                 </Table>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Leave Records Table */}
+          <Card className="border-2">
+            <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-amber-700">
+                    <Calendar className="h-5 w-5" />
+                    ประวัติการลาทั้งหมด
+                  </CardTitle>
+                  <CardDescription>
+                    รายการการลางานของพนักงานทั้งหมด
+                  </CardDescription>
+                </div>
+                <Link href="/leave">
+                  <Button variant="outline" className="gap-2">
+                    จัดการการลา
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {/* Date Range Filter */}
+              <div className="mb-4 flex items-center gap-3">
+                <DateRangePicker
+                  startDate={leaveStartDate}
+                  endDate={leaveEndDate}
+                  onStartDateChange={setLeaveStartDate}
+                  onEndDateChange={setLeaveEndDate}
+                  onClear={() => {
+                    setLeaveStartDate('');
+                    setLeaveEndDate('');
+                  }}
+                />
+                <div className="text-sm text-gray-600">
+                  แสดง {filteredLeaveRecords.length} รายการ
+                  {(leaveStartDate || leaveEndDate) && ` (จากทั้งหมด ${leaveRecords.length} รายการ)`}
+                </div>
+              </div>
+
+              <div className="border rounded-lg overflow-hidden">
+                <div className="max-h-[400px] overflow-y-auto relative">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-gray-50 z-10 shadow-sm">
+                      <TableRow>
+                        <TableCell className="text-left font-semibold">วันที่ลา</TableCell>
+                        <TableCell className="text-left font-semibold">รหัสพนักงาน</TableCell>
+                        <TableCell className="text-left font-semibold">ชื่อ-นามสกุล</TableCell>
+                        <TableCell className="text-left font-semibold">แผนก</TableCell>
+                        <TableCell className="text-left font-semibold">ประเภท</TableCell>
+                        <TableCell className="text-left font-semibold">เหตุผล</TableCell>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredLeaveRecords.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                            {leaveRecords.length === 0 ? 'ไม่มีรายการลา' : 'ไม่พบรายการลาในช่วงเวลาที่เลือก'}
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredLeaveRecords.map((leave) => (
+                          <TableRow key={leave.id} className="hover:bg-amber-50">
+                            <TableCell className="font-medium">
+                              {new Date(leave.leave_date).toLocaleDateString('th-TH', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </TableCell>
+                            <TableCell className="font-medium">{leave.employee_id}</TableCell>
+                            <TableCell>{leave.employees?.name || '-'}</TableCell>
+                            <TableCell>
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                {leave.employees?.department || '-'}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                                leave.leave_type === 'Sick'
+                                  ? 'bg-red-100 text-red-700'
+                                  : leave.leave_type === 'Personal'
+                                  ? 'bg-blue-100 text-blue-700'
+                                  : leave.leave_type === 'Vacation'
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-gray-100 text-gray-700'
+                              }`}>
+                                {leave.leave_type === 'Sick' ? 'ลาป่วย' :
+                                 leave.leave_type === 'Personal' ? 'ลากิจ' :
+                                 leave.leave_type === 'Vacation' ? 'ลาพักร้อน' :
+                                 leave.leave_type}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-sm text-gray-600">
+                              {leave.reason || '-'}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
                 </div>
               </div>
             </CardContent>
