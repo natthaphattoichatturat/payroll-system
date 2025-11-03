@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { MobileNav } from './mobile-nav';
 import { useLanguage } from '@/contexts/language-context';
+import { Dropdown, DropdownItem } from '@/components/ui/dropdown';
 import {
   LayoutDashboard,
   Users,
@@ -14,11 +15,20 @@ import {
   FileText,
   Brain,
   Languages,
+  ChevronDown,
 } from 'lucide-react';
 
 export function Navbar() {
   const pathname = usePathname();
   const { language, setLanguage, t } = useLanguage();
+
+  const languages = [
+    { code: 'th', name: 'ไทย', flag: '🇹🇭' },
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'cn', name: '中文', flag: '🇨🇳' },
+  ] as const;
+
+  const currentLanguage = languages.find(lang => lang.code === language)!;
 
   const navigation = [
     { name: t('nav.home'), href: '/', icon: LayoutDashboard },
@@ -77,15 +87,31 @@ export function Navbar() {
               })}
             </div>
 
-            {/* Language Toggle Button */}
-            <button
-              onClick={() => setLanguage(language === 'th' ? 'en' : 'th')}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-soft-gray rounded-md transition-all border border-table-border"
-              title={language === 'th' ? 'Switch to English' : 'เปลี่ยนเป็นภาษาไทย'}
+            {/* Language Dropdown */}
+            <Dropdown
+              trigger={
+                <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-soft-gray rounded-md transition-all border border-table-border">
+                  <Languages className="h-4 w-4" />
+                  <span className="text-lg">{currentLanguage.flag}</span>
+                  <span className="font-semibold">{currentLanguage.name}</span>
+                  <ChevronDown className="h-4 w-4" />
+                </button>
+              }
             >
-              <Languages className="h-4 w-4" />
-              <span className="font-semibold">{language.toUpperCase()}</span>
-            </button>
+              {languages.map((lang) => (
+                <DropdownItem
+                  key={lang.code}
+                  onClick={() => setLanguage(lang.code as 'th' | 'en' | 'cn')}
+                  className={cn(
+                    'flex items-center gap-2',
+                    language === lang.code && 'bg-automation-blue/10 text-automation-blue'
+                  )}
+                >
+                  <span className="text-lg">{lang.flag}</span>
+                  <span>{lang.name}</span>
+                </DropdownItem>
+              ))}
+            </Dropdown>
           </div>
         </div>
       </div>

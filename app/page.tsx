@@ -218,9 +218,9 @@ export default function Dashboard() {
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-4 sm:p-6 text-white shadow-lg">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold">ระบบคำนวณเงินเดือน</h1>
+            <h1 className="text-xl sm:text-2xl font-bold">{t('home.title')}</h1>
             <p className="mt-1 text-sm text-blue-100">
-              ภาพรวมข้อมูลเงินเดือนพนักงาน
+              {t('home.subtitle')}
             </p>
           </div>
           <div className="w-full lg:w-80">
@@ -241,15 +241,15 @@ export default function Dashboard() {
                 <div>
                   <CardTitle className="flex items-center gap-2 text-green-700">
                     <Users className="h-5 w-5" />
-                    รายการเงินเดือนพนักงาน
+                    {t('payroll.title')}
                   </CardTitle>
                   <CardDescription>
-                    รอบ: {selectedPeriod.period_name} | พนักงาน {filteredCalculations.length} คน
+                    {t('payroll.period')}: {selectedPeriod.period_name} | {t('payroll.employees')} {filteredCalculations.length} {t('payroll.people')}
                   </CardDescription>
                 </div>
                 <Link href={`/payroll?period_id=${selectedPeriod.id}`}>
                   <Button variant="outline" className="gap-2">
-                    ดูรายละเอียดเต็ม
+                    {t('payroll.viewDetails')}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
@@ -280,21 +280,21 @@ export default function Dashboard() {
                         onSort={handleSort}
                         getSortIcon={getSortIcon}
                       >
-                        รหัส
+                        {t('payroll.empId')}
                       </SortableTableHeader>
                       <SortableTableHeader
                         columnKey="employees.name"
                         onSort={handleSort}
                         getSortIcon={getSortIcon}
                       >
-                        ชื่อ-นามสกุล
+                        {t('payroll.name')}
                       </SortableTableHeader>
                       <SortableTableHeader
                         columnKey="employees.department"
                         onSort={handleSort}
                         getSortIcon={getSortIcon}
                       >
-                        แผนก
+                        {t('payroll.department')}
                       </SortableTableHeader>
                       <SortableTableHeader
                         columnKey="total_ot_hours"
@@ -302,7 +302,7 @@ export default function Dashboard() {
                         getSortIcon={getSortIcon}
                         align="right"
                       >
-                        OT (ชม.)
+                        {t('payroll.otHours')}
                       </SortableTableHeader>
                       <SortableTableHeader
                         columnKey="ot_amount"
@@ -310,7 +310,7 @@ export default function Dashboard() {
                         getSortIcon={getSortIcon}
                         align="right"
                       >
-                        ค่า OT
+                        {t('payroll.otAmount')}
                       </SortableTableHeader>
                       <SortableTableHeader
                         columnKey="gross_salary"
@@ -318,7 +318,7 @@ export default function Dashboard() {
                         getSortIcon={getSortIcon}
                         align="right"
                       >
-                        Gross
+                        {t('payroll.gross')}
                       </SortableTableHeader>
                       <SortableTableHeader
                         columnKey="net_salary"
@@ -326,7 +326,7 @@ export default function Dashboard() {
                         getSortIcon={getSortIcon}
                         align="right"
                       >
-                        Net
+                        {t('payroll.net')}
                       </SortableTableHeader>
                     </TableRow>
                   </TableHeader>
@@ -334,13 +334,13 @@ export default function Dashboard() {
                     {isLoading ? (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                          กำลังโหลดข้อมูล...
+                          {t('payroll.loading')}
                         </TableCell>
                       </TableRow>
                     ) : sortedData.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                          {searchTerm ? 'ไม่พบข้อมูลที่ค้นหา' : 'ยังไม่มีข้อมูล'}
+                          {searchTerm ? t('payroll.noResults') : t('payroll.noData')}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -382,15 +382,15 @@ export default function Dashboard() {
                 <div>
                   <CardTitle className="flex items-center gap-2 text-amber-700">
                     <Calendar className="h-5 w-5" />
-                    ประวัติการลาทั้งหมด
+                    {t('leave.title')}
                   </CardTitle>
                   <CardDescription>
-                    รายการการลางานของพนักงานทั้งหมด
+                    {t('leave.subtitle')}
                   </CardDescription>
                 </div>
                 <Link href="/leave">
                   <Button variant="outline" className="gap-2">
-                    จัดการการลา
+                    {t('leave.manage')}
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </Link>
@@ -410,8 +410,8 @@ export default function Dashboard() {
                   }}
                 />
                 <div className="text-sm text-gray-600">
-                  แสดง {filteredLeaveRecords.length} รายการ
-                  {(leaveStartDate || leaveEndDate) && ` (จากทั้งหมด ${leaveRecords.length} รายการ)`}
+                  {t('leave.showing')} {filteredLeaveRecords.length} {t('leave.items')}
+                  {(leaveStartDate || leaveEndDate) && ` (${t('leave.outOf')} ${leaveRecords.length} ${t('leave.items')})`}
                 </div>
               </div>
 
@@ -420,19 +420,19 @@ export default function Dashboard() {
                   <Table>
                     <TableHeader className="sticky top-0 bg-gray-50 z-10 shadow-sm">
                       <TableRow>
-                        <TableCell className="text-left font-semibold">วันที่ลา</TableCell>
-                        <TableCell className="text-left font-semibold">รหัสพนักงาน</TableCell>
-                        <TableCell className="text-left font-semibold">ชื่อ-นามสกุล</TableCell>
-                        <TableCell className="text-left font-semibold">แผนก</TableCell>
-                        <TableCell className="text-left font-semibold">ประเภท</TableCell>
-                        <TableCell className="text-left font-semibold">เหตุผล</TableCell>
+                        <TableCell className="text-left font-semibold">{t('leave.date')}</TableCell>
+                        <TableCell className="text-left font-semibold">{t('leave.empId')}</TableCell>
+                        <TableCell className="text-left font-semibold">{t('leave.empName')}</TableCell>
+                        <TableCell className="text-left font-semibold">{t('leave.department')}</TableCell>
+                        <TableCell className="text-left font-semibold">{t('leave.type')}</TableCell>
+                        <TableCell className="text-left font-semibold">{t('leave.reason')}</TableCell>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredLeaveRecords.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                            {leaveRecords.length === 0 ? 'ไม่มีรายการลา' : 'ไม่พบรายการลาในช่วงเวลาที่เลือก'}
+                            {leaveRecords.length === 0 ? t('leave.noLeaves') : t('leave.noLeavesInRange')}
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -462,9 +462,9 @@ export default function Dashboard() {
                                   ? 'bg-green-100 text-green-700'
                                   : 'bg-gray-100 text-gray-700'
                               }`}>
-                                {leave.leave_type === 'Sick' ? 'ลาป่วย' :
-                                 leave.leave_type === 'Personal' ? 'ลากิจ' :
-                                 leave.leave_type === 'Vacation' ? 'ลาพักร้อน' :
+                                {leave.leave_type === 'Sick' ? t('leave.typeSick') :
+                                 leave.leave_type === 'Personal' ? t('leave.typePersonal') :
+                                 leave.leave_type === 'Vacation' ? t('leave.typeVacation') :
                                  leave.leave_type}
                               </span>
                             </TableCell>
@@ -487,7 +487,7 @@ export default function Dashboard() {
               <Card className="border-l-4 border-l-green-500">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-gray-600">
-                    เงินเดือนฐาน (ทั้งหมด)
+                    {t('finance.baseSalary')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -495,7 +495,7 @@ export default function Dashboard() {
                     {formatCurrency(stats.financial_summary.total_base_salary)}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    ไม่รวมค่า OT
+                    {t('finance.baseSalaryDesc')}
                   </p>
                 </CardContent>
               </Card>
@@ -503,7 +503,7 @@ export default function Dashboard() {
               <Card className="border-l-4 border-l-blue-500">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-gray-600">
-                    ค่า OT (ทั้งหมด)
+                    {t('finance.otTotal')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -511,7 +511,7 @@ export default function Dashboard() {
                     {formatCurrency(stats.financial_summary.total_ot_amount)}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    ค่าล่วงเวลาทั้งหมด
+                    {t('finance.otTotalDesc')}
                   </p>
                 </CardContent>
               </Card>
@@ -519,7 +519,7 @@ export default function Dashboard() {
               <Card className="border-l-4 border-l-purple-500">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-gray-600">
-                    รวม (ก่อนหัก)
+                    {t('finance.grossTotal')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -527,7 +527,7 @@ export default function Dashboard() {
                     {formatCurrency(stats.financial_summary.total_gross)}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Gross Salary
+                    {t('finance.grossSalary')}
                   </p>
                 </CardContent>
               </Card>
@@ -535,7 +535,7 @@ export default function Dashboard() {
               <Card className="border-l-4 border-l-orange-500">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm font-medium text-gray-600">
-                    รวม (สุทธิ)
+                    {t('finance.netTotal')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -543,7 +543,7 @@ export default function Dashboard() {
                     {formatCurrency(stats.financial_summary.total_net)}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    หลังหักภาษี + ประกันสังคม
+                    {t('finance.netDesc')}
                   </p>
                 </CardContent>
               </Card>
@@ -558,7 +558,7 @@ export default function Dashboard() {
                 <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
                   <CardTitle className="flex items-center gap-2 text-green-700">
                     <TrendingUp className="h-5 w-5" />
-                    Top 5 OT สูงสุด
+                    {t('stats.topOT')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
@@ -575,7 +575,7 @@ export default function Dashboard() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold text-green-600">{emp.ot_hours.toFixed(1)} ชม.</div>
+                          <div className="font-bold text-green-600">{emp.ot_hours.toFixed(1)} {t('stats.hours')}</div>
                           <div className="text-xs text-gray-500">{formatCurrency(emp.ot_amount)}</div>
                         </div>
                       </div>
@@ -591,7 +591,7 @@ export default function Dashboard() {
                 <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50">
                   <CardTitle className="flex items-center gap-2 text-blue-700">
                     <TrendingDown className="h-5 w-5" />
-                    Top 5 OT ต่ำสุด
+                    {t('stats.lowOT')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
@@ -608,7 +608,7 @@ export default function Dashboard() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold text-blue-600">{emp.ot_hours.toFixed(1)} ชม.</div>
+                          <div className="font-bold text-blue-600">{emp.ot_hours.toFixed(1)} {t('stats.hours')}</div>
                           <div className="text-xs text-gray-500">{formatCurrency(emp.ot_amount)}</div>
                         </div>
                       </div>
@@ -625,7 +625,7 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2 text-purple-700">
                       <Building2 className="h-5 w-5" />
-                      OT เฉลี่ยแต่ละแผนก
+                      {t('stats.deptAvgOT')}
                     </CardTitle>
                     <button
                       onClick={toggleDeptSort}
@@ -655,7 +655,7 @@ export default function Dashboard() {
                             ></div>
                           </div>
                           <div className="font-bold text-purple-600 min-w-[60px] text-right">
-                            {dept.avg_ot_hours.toFixed(1)} ชม.
+                            {dept.avg_ot_hours.toFixed(1)} {t('stats.hours')}
                           </div>
                         </div>
                       </div>
@@ -675,10 +675,10 @@ export default function Dashboard() {
                   <CardHeader className="bg-gradient-to-r from-orange-50 to-red-50">
                     <CardTitle className="flex items-center gap-2 text-orange-700">
                       <Calendar className="h-5 w-5" />
-                      ลางานมากที่สุด 5 อันดับ
+                      {t('stats.topLeave')}
                     </CardTitle>
                     <CardDescription>
-                      รอบ: {selectedPeriod.period_name}
+                      {t('payroll.period')}: {selectedPeriod.period_name}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pt-6">
@@ -694,7 +694,7 @@ export default function Dashboard() {
                               <div className="text-xs text-gray-500">{emp.employee_id}</div>
                             </div>
                           </div>
-                          <div className="font-bold text-orange-600">{emp.leave_count} วัน</div>
+                          <div className="font-bold text-orange-600">{emp.leave_count} {t('stats.days')}</div>
                         </div>
                       ))}
                     </div>
@@ -708,10 +708,10 @@ export default function Dashboard() {
                   <CardHeader className="bg-gradient-to-r from-teal-50 to-cyan-50">
                     <CardTitle className="flex items-center gap-2 text-teal-700">
                       <Calendar className="h-5 w-5" />
-                      ลางานน้อยที่สุด 5 อันดับ
+                      {t('stats.lowLeave')}
                     </CardTitle>
                     <CardDescription>
-                      รอบ: {selectedPeriod.period_name}
+                      {t('payroll.period')}: {selectedPeriod.period_name}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pt-6">
@@ -727,7 +727,7 @@ export default function Dashboard() {
                               <div className="text-xs text-gray-500">{emp.employee_id}</div>
                             </div>
                           </div>
-                          <div className="font-bold text-teal-600">{emp.leave_count} วัน</div>
+                          <div className="font-bold text-teal-600">{emp.leave_count} {t('stats.days')}</div>
                         </div>
                       ))}
                     </div>
@@ -744,10 +744,10 @@ export default function Dashboard() {
           <CardContent className="pt-20 pb-20 text-center">
             <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-600 mb-2">
-              เลือกรอบเงินเดือนเพื่อดูข้อมูล
+              {t('home.selectPeriod')}
             </h3>
             <p className="text-gray-500">
-              กรุณาเลือกรอบเงินเดือนจากด้านบนเพื่อแสดงข้อมูลสรุป
+              {t('home.selectPeriodDesc')}
             </p>
           </CardContent>
         </Card>

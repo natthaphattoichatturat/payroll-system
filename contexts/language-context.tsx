@@ -1,8 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
-type Language = 'th' | 'en';
+type Language = 'th' | 'en' | 'cn';
 
 interface LanguageContextType {
   language: Language;
@@ -13,15 +13,16 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>('th');
-
-  // Load language from localStorage on mount
-  useEffect(() => {
-    const savedLanguage = localStorage.getItem('language') as Language;
-    if (savedLanguage && (savedLanguage === 'th' || savedLanguage === 'en')) {
-      setLanguage(savedLanguage);
+  const [language, setLanguage] = useState<Language>(() => {
+    // Initialize from localStorage on client-side
+    if (typeof window !== 'undefined') {
+      const savedLanguage = localStorage.getItem('language') as Language;
+      if (savedLanguage && (savedLanguage === 'th' || savedLanguage === 'en' || savedLanguage === 'cn')) {
+        return savedLanguage;
+      }
     }
-  }, []);
+    return 'th'; // Default to Thai
+  });
 
   // Save language to localStorage when changed
   const handleSetLanguage = (lang: Language) => {
@@ -245,5 +246,102 @@ const translations: Record<Language, Record<string, string>> = {
     'leavePage.recentLeaves': 'Leave Records',
     'leavePage.recent10': 'Recent 10 records',
     'leavePage.allLeaves': 'All Leave Records',
+  },
+  cn: {
+    // Navigation
+    'nav.home': '首页',
+    'nav.employees': '员工',
+    'nav.attendance': '考勤',
+    'nav.leave': '请假',
+    'nav.payroll': '薪资',
+    'nav.ai': 'AI功能',
+    'nav.reports': '报告',
+    'nav.auto': '自动',
+
+    // Dashboard/Home
+    'home.title': '薪资管理系统',
+    'home.subtitle': '员工薪资概览',
+    'home.selectPeriod': '选择薪资周期查看数据',
+    'home.selectPeriodDesc': '请从上方选择薪资周期以显示摘要',
+
+    // Payroll Table
+    'payroll.title': '员工薪资清单',
+    'payroll.period': '周期',
+    'payroll.employees': '员工',
+    'payroll.people': '人',
+    'payroll.viewDetails': '查看详情',
+    'payroll.search': '搜索员工...',
+    'payroll.loading': '加载数据中...',
+    'payroll.noData': '暂无数据',
+    'payroll.noResults': '未找到搜索结果',
+    'payroll.empId': '工号',
+    'payroll.name': '姓名',
+    'payroll.department': '部门',
+    'payroll.otHours': '加班（小时）',
+    'payroll.otAmount': '加班费',
+    'payroll.gross': '毛薪',
+    'payroll.net': '净薪',
+
+    // Leave Records
+    'leave.title': '全部请假记录',
+    'leave.subtitle': '全部员工请假记录',
+    'leave.manage': '管理请假',
+    'leave.selectDateRange': '选择日期范围',
+    'leave.showing': '显示',
+    'leave.items': '项',
+    'leave.outOf': '共',
+    'leave.date': '请假日期',
+    'leave.empId': '员工工号',
+    'leave.empName': '姓名',
+    'leave.department': '部门',
+    'leave.type': '类型',
+    'leave.reason': '原因',
+    'leave.noLeaves': '无请假记录',
+    'leave.noLeavesInRange': '所选日期范围内无请假记录',
+    'leave.typeSick': '病假',
+    'leave.typePersonal': '事假',
+    'leave.typeVacation': '年假',
+
+    // Financial Summary
+    'finance.baseSalary': '基本工资（总计）',
+    'finance.baseSalaryDesc': '不包括加班费',
+    'finance.otTotal': '加班费（总计）',
+    'finance.otTotalDesc': '全部加班费',
+    'finance.grossTotal': '总计（税前）',
+    'finance.grossSalary': '毛薪',
+    'finance.netTotal': '总计（净额）',
+    'finance.netDesc': '扣税+社保后',
+
+    // Statistics
+    'stats.topOT': '加班时长前5',
+    'stats.lowOT': '加班时长后5',
+    'stats.deptAvgOT': '各部门平均加班',
+    'stats.topLeave': '请假最多前5',
+    'stats.lowLeave': '请假最少前5',
+    'stats.hours': '小时',
+    'stats.days': '天',
+
+    // Date Range Picker
+    'dateRange.select': '选择日期范围',
+    'dateRange.startDate': '开始日期',
+    'dateRange.endDate': '结束日期',
+    'dateRange.clear': '清除',
+    'dateRange.ok': '确定',
+
+    // Leave Page
+    'leavePage.title': '请假管理',
+    'leavePage.subtitle': '记录和管理员工请假',
+    'leavePage.addLeave': '记录请假',
+    'leavePage.selectEmployee': '选择员工和请假日期',
+    'leavePage.searchEmployee': '搜索员工',
+    'leavePage.searchPlaceholder': '输入姓名或工号...',
+    'leavePage.leaveDate': '请假日期',
+    'leavePage.leaveType': '请假类型',
+    'leavePage.reasonOptional': '原因（可选）',
+    'leavePage.reasonPlaceholder': '输入请假原因...',
+    'leavePage.submit': '提交请假',
+    'leavePage.recentLeaves': '请假记录',
+    'leavePage.recent10': '最近10条记录',
+    'leavePage.allLeaves': '全部请假记录',
   },
 };
