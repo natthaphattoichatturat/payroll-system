@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/language-context';
 
 interface DateRangePickerProps {
   startDate: string;
@@ -19,6 +20,7 @@ export function DateRangePicker({
   onEndDateChange,
   onClear,
 }: DateRangePickerProps) {
+  const { t, language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -41,13 +43,13 @@ export function DateRangePicker({
 
   const formatDateRange = () => {
     if (!startDate && !endDate) {
-      return 'เลือกช่วงเวลา';
+      return t('dateRange.select');
     }
 
     const formatDate = (dateStr: string) => {
       if (!dateStr) return '';
       const date = new Date(dateStr);
-      return date.toLocaleDateString('th-TH', {
+      return date.toLocaleDateString(language === 'th' ? 'th-TH' : 'en-US', {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
@@ -61,7 +63,7 @@ export function DateRangePicker({
     } else if (endDate) {
       return `... - ${formatDate(endDate)}`;
     }
-    return 'เลือกช่วงเวลา';
+    return t('dateRange.select');
   };
 
   const handleClear = () => {
@@ -89,7 +91,7 @@ export function DateRangePicker({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">
-                วันที่เริ่มต้น
+                {t('dateRange.startDate')}
               </label>
               <input
                 type="date"
@@ -101,7 +103,7 @@ export function DateRangePicker({
 
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">
-                วันที่สิ้นสุด
+                {t('dateRange.endDate')}
               </label>
               <input
                 type="date"
@@ -120,7 +122,7 @@ export function DateRangePicker({
                   onClick={handleClear}
                   className="flex-1 text-sm"
                 >
-                  ล้าง
+                  {t('dateRange.clear')}
                 </Button>
               )}
               <Button
@@ -128,7 +130,7 @@ export function DateRangePicker({
                 onClick={() => setIsOpen(false)}
                 className="flex-1 bg-automation-blue hover:bg-automation-blue/90 text-sm"
               >
-                ตกลง
+                {t('dateRange.ok')}
               </Button>
             </div>
           </div>

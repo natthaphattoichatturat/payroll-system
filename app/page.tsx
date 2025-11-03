@@ -24,6 +24,7 @@ import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
 import { useTableSort } from '@/hooks/use-table-sort';
 import { PayrollCardView } from '@/components/payroll/payroll-card-view';
+import { useLanguage } from '@/contexts/language-context';
 
 interface PayrollPeriod {
   id: number;
@@ -81,6 +82,7 @@ interface LeaveRecord {
 }
 
 export default function Dashboard() {
+  const { t } = useLanguage();
   const [selectedPeriod, setSelectedPeriod] = useState<PayrollPeriod | null>(null);
   const [calculations, setCalculations] = useState<PayrollCalculation[]>([]);
   const [filteredCalculations, setFilteredCalculations] = useState<PayrollCalculation[]>([]);
