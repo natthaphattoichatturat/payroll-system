@@ -3,13 +3,10 @@ import { getOpenAI, MODEL } from '@/lib/openai';
 import { DATABASE_SCHEMA } from '@/lib/database-schema';
 import { Pool } from 'pg';
 
-// PostgreSQL connection pool
+// PostgreSQL connection pool using DATABASE_URL
+// Format: postgres://user:password@host:port/database
 const pool = new Pool({
-  host: process.env.DB_HOST || 'db.ooipmyvpvpdbffjvbcej.supabase.co',
-  port: parseInt(process.env.DB_PORT || '5432'),
-  database: process.env.DB_NAME || 'postgres',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD,
+  connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
   max: 20,
   idleTimeoutMillis: 30000,
