@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getOpenAI, MODEL } from '@/lib/openai';
 import { DATABASE_SCHEMA } from '@/lib/database-schema';
-import { createClient } from '@supabase/supabase-js';
+import { Pool } from 'pg';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// PostgreSQL connection pool
+const pool = new Pool({
+  host: process.env.DB_HOST || 'db.ooipmyvpvpdbffjvbcej.supabase.co',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME || 'postgres',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD,
+  ssl: { rejectUnauthorized: false },
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -66,23 +74,15 @@ ${DATABASE_SCHEMA}
       );
     }
 
-    // Step 2: Execute SQL query
+    // Step 2: Execute SQL query using PostgreSQL
+    console.log('Executing SQL query:', sqlQuery);
     let queryResult;
+    const client = await pool.connect();
+    
     try {
-      const { data, error } = await supabase.rpc('execute_sql', { sql_query: sqlQuery });
-
-      if (error) {
-        // If RPC doesn't exist, try direct query (this is a fallback)
-        // We'll need to parse and execute the query differently
-        console.error('RPC error, trying direct approach:', error);
-
-        // For safety, we'll execute via supabase client
-        // This is a simplified version - may need adjustment
-        const result = await executeQuerySafely(sqlQuery);
-        queryResult = result;
-      } else {
-        queryResult = data;
-      }
+      const result = await client.query(sqlQuery);
+      queryResult = result.rows;
+      console.log(`Query returned ${queryResult.length} rows`);
     } catch (execError) {
       console.error('Query execution error:', execError);
       return NextResponse.json(
@@ -93,6 +93,8 @@ ${DATABASE_SCHEMA}
         },
         { status: 500 }
       );
+    } finally {
+      client.release();
     }
 
     // Step 3: Format results using LLM
@@ -142,33 +144,11 @@ ${DATABASE_SCHEMA}
   } catch (error) {
     console.error('Data query error:', error);
     return NextResponse.json(
-      { error: 'Failed to process data query' },
+      {
+        error: 'Failed to process data query',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     );
   }
-}
-
-// Helper function to safely execute queries
-async function executeQuerySafely(sqlQuery: string) {
-  // This is a simplified parser - in production you'd want more robust parsing
-  // For now, we'll return a message indicating the query would be executed
-
-  // Try to determine which table is being queried
-  const tableMatch = sqlQuery.match(/from\s+(\w+)/i);
-  if (!tableMatch) {
-    throw new Error('Could not determine table from query');
-  }
-
-  const tableName = tableMatch[1];
-
-  // Execute a safe select
-  // Note: This is a basic implementation. Real production code would need
-  // proper SQL parsing and execution
-  const { data, error } = await supabase
-    .from(tableName)
-    .select('*')
-    .limit(100);
-
-  if (error) throw error;
-  return data;
 }
