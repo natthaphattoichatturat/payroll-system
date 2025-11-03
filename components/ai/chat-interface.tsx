@@ -130,8 +130,29 @@ export function ChatInterface({ className = '' }: ChatInterfaceProps) {
               }`}
             >
               {message.role === 'assistant' ? (
-                <div className="prose prose-xs max-w-none prose-headings:text-text-primary prose-headings:text-sm prose-headings:font-semibold prose-headings:mb-2 prose-p:text-text-primary prose-p:text-xs prose-p:leading-relaxed prose-strong:text-text-primary prose-ul:text-text-primary prose-ul:text-xs prose-ol:text-text-primary prose-ol:text-xs prose-code:text-ai-purple prose-code:bg-ai-purple/10 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-table:text-xs">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                <div className="prose prose-xs max-w-none prose-headings:text-text-primary prose-headings:text-sm prose-headings:font-semibold prose-headings:mb-2 prose-p:text-text-primary prose-p:text-xs prose-p:leading-relaxed prose-strong:text-text-primary prose-ul:text-text-primary prose-ul:text-xs prose-ol:text-text-primary prose-ol:text-xs prose-code:text-ai-purple prose-code:bg-ai-purple/10 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs">
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      table: ({ node, ...props }) => (
+                        <div className="overflow-x-auto my-3 -mx-2 border border-table-border rounded">
+                          <table className="min-w-full text-xs border-collapse" {...props} />
+                        </div>
+                      ),
+                      thead: ({ node, ...props }) => (
+                        <thead className="bg-automation-blue/10" {...props} />
+                      ),
+                      th: ({ node, ...props }) => (
+                        <th className="border-b border-table-border px-3 py-2 text-left font-semibold text-text-primary whitespace-nowrap" {...props} />
+                      ),
+                      td: ({ node, ...props }) => (
+                        <td className="border-b border-table-border/50 px-3 py-2 text-text-primary" {...props} />
+                      ),
+                      tr: ({ node, ...props }) => (
+                        <tr className="hover:bg-soft-gray/30 transition-colors" {...props} />
+                      ),
+                    }}
+                  >
                     {message.content}
                   </ReactMarkdown>
                 </div>
