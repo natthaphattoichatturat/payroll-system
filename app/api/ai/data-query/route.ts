@@ -5,13 +5,28 @@ import { Pool } from 'pg';
 
 // PostgreSQL connection pool using DATABASE_URL
 // Format: postgres://user:password@host:port/database
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
+// Lazy initialization to avoid errors during build time
+let pool: Pool | null = null;
+
+function getPool(): Pool {
+  if (!pool) {
+    if (!process.env.DATABASE_URL) {
+      throw new Error(
+        'DATABASE_URL is not set. Please add it to your .env.local file.\n' +
+        'Get it from: Supabase Dashboard > Settings > Database > Connection Pooling > Transaction Mode > URI'
+      );
+    }
+
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
+    });
+  }
+  return pool;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -74,7 +89,8 @@ ${DATABASE_SCHEMA}
     // Step 2: Execute SQL query using PostgreSQL
     console.log('Executing SQL query:', sqlQuery);
     let queryResult;
-    const client = await pool.connect();
+    const dbPool = getPool();
+    const client = await dbPool.connect();
     
     try {
       const result = await client.query(sqlQuery);

@@ -1,46 +1,46 @@
 export const DATABASE_SCHEMA = `
 # Database Schema for Payroll System
 
-## Tables:
+## ⚠️ สำคัญ: Tables ที่มีจริงในฐานข้อมูล
+
+### Tables ที่มี:
+1. employees (ข้อมูลพนักงาน)
+2. payroll_periods (รอบเงินเดือน)
+3. daily_attendance (ข้อมูล OT และการทำงานรายวัน) ← **ใช้ table นี้สำหรับข้อมูล OT**
+4. attendance_scans (การสแกนเข้า-ออกงาน)
+
+### ❌ Tables ที่ไม่มี:
+- **payroll** - ไม่มี table นี้! ข้อมูล OT อยู่ใน daily_attendance แทน
+
+---
+
+## Tables Detail:
 
 ### 1. employees
-- employee_id: VARCHAR(20) PRIMARY KEY (รหัสพนักงาน เช่น '20055885')
-- first_name: VARCHAR (ชื่อ)
-- last_name: VARCHAR (นามสกุล)
-- department: VARCHAR (แผนก เช่น Production, QA, Office, Warehouse)
-- position: VARCHAR (ตำแหน่งงาน)
-- base_salary: DECIMAL (เงินเดือนฐาน)
-- ot_hourly_rate: DECIMAL (อัตรา OT ต่อชั่วโมง)
-- hire_date: DATE (วันที่เริ่มงาน)
-- status: VARCHAR (active/inactive)
-- created_at: TIMESTAMP
-
-### 2. payroll_periods
 - id: SERIAL PRIMARY KEY
-- period_name: VARCHAR (เช่น "ตุลาคม 2025")
-- start_date: DATE (วันเริ่มต้นรอบเงินเดือน เช่น 2025-10-11)
-- end_date: DATE (วันสิ้นสุดรอบเงินเดือน เช่น 2025-10-25)
-- payment_date: DATE (วันจ่ายเงิน)
-- status: VARCHAR (draft/calculated/paid)
-- created_at: TIMESTAMP
-
-### 3. payroll
-- id: SERIAL PRIMARY KEY
-- period_id: INTEGER (FK -> payroll_periods.id)
-- employee_id: VARCHAR(20) (FK -> employees.employee_id)
-- base_salary: DECIMAL (เงินเดือนฐาน)
-- work_days: INTEGER (จำนวนวันทำงาน)
-- ot_hours: DECIMAL(10,2) (ชั่วโมง OT รวม - ข้อมูลที่ใช้คำนวณเงินจริง)
-- ot_amount: DECIMAL (เงิน OT)
-- gross_salary: DECIMAL (เงินเดือนรวมก่อนหัก)
-- tax: DECIMAL (ภาษี)
-- social_security: DECIMAL (ประกันสังคม)
-- other_deductions: DECIMAL (หักอื่นๆ)
-- net_salary: DECIMAL (เงินสุทธิ)
+- employee_id: VARCHAR(20) UNIQUE (รหัสพนักงาน เช่น '20055885')
+- **name: VARCHAR(255)** (ชื่อ-นามสกุลเต็ม เช่น "สมชาย ใจดี") ← **เป็น full name ไม่แยก first/last**
+- department: VARCHAR(100) (แผนก เช่น Production, QA, Office, Warehouse)
+- certificate_type: VARCHAR(50) (ประเภทใบรับรอง)
+- base_salary: NUMERIC(10,2) (เงินเดือนฐาน default 5000.00)
+- ot_rate: NUMERIC(10,2) (อัตรา OT ต่อชั่วโมง default 80.00)
 - created_at: TIMESTAMP
 - updated_at: TIMESTAMP
 
-### 4. daily_attendance
+**สำคัญ:** 
+- ใช้ 'name' ไม่ใช่ 'first_name' กับ 'last_name'
+- ถ้าต้องการค้นหาชื่อ ใช้: WHERE name LIKE '%สมชาย%' หรือ WHERE name = 'สมชาย ใจดี'
+
+### 2. payroll_periods
+- id: SERIAL PRIMARY KEY
+- period_name: VARCHAR(100) (เช่น "ตุลาคม 2025")
+- start_date: DATE (วันเริ่มต้นรอบ เช่น 2025-10-11)
+- end_date: DATE (วันสิ้นสุดรอบ เช่น 2025-10-25)
+- payment_date: DATE (วันจ่ายเงิน)
+- status: VARCHAR(20) (draft/calculated/paid)
+- created_at: TIMESTAMP
+
+### 3. daily_attendance ← **ใช้ table นี้สำหรับข้อมูล OT**
 - id: SERIAL PRIMARY KEY
 - employee_id: VARCHAR(20) (FK -> employees.employee_id)
 - period_id: INTEGER (FK -> payroll_periods.id)
@@ -69,17 +69,9 @@ export const DATABASE_SCHEMA = `
 - created_at: TIMESTAMP
 - updated_at: TIMESTAMP
 
-### 5. leave_records
+### 4. attendance_scans
 - id: SERIAL PRIMARY KEY
-- employee_id: VARCHAR(20) (FK -> employees.employee_id)
-- leave_date: DATE (วันที่ลา)
-- leave_type: VARCHAR (sick/personal/vacation/other - ลาป่วย/ลากิจ/ลาพักร้อน/อื่นๆ)
-- reason: TEXT (เหตุผล)
-- created_at: TIMESTAMP
-
-### 6. attendance_scans
-- id: SERIAL PRIMARY KEY
-- machine_id: VARCHAR (รหัสเครื่องสแกน เช่น '01', '04')
+- machine_id: VARCHAR(10) (รหัสเครื่องสแกน เช่น '01', '04')
 - employee_id: VARCHAR(20) (FK -> employees.employee_id)
 - scan_date: DATE (วันที่สแกน)
 - scan_time: TIME (เวลาที่สแกน)
@@ -87,94 +79,117 @@ export const DATABASE_SCHEMA = `
 - created_at: TIMESTAMP
 
 ## Relationships:
-- payroll.period_id -> payroll_periods.id
-- payroll.employee_id -> employees.employee_id
 - daily_attendance.employee_id -> employees.employee_id
 - daily_attendance.period_id -> payroll_periods.id
-- leave_records.employee_id -> employees.employee_id
 - attendance_scans.employee_id -> employees.employee_id
 
 ## Important Query Examples:
 
-### ดึงข้อมูลพนักงานพร้อมข้อมูล OT ในรอบล่าสุด:
+### ✅ ดึงข้อมูลพนักงานพร้อม OT ในรอบล่าสุด (Top 5):
 \`\`\`sql
 SELECT 
   e.employee_id,
-  e.first_name || ' ' || e.last_name as full_name,
+  e.name as full_name,
   e.department,
-  p.ot_hours,
-  p.ot_amount,
-  p.net_salary
-FROM payroll p
-JOIN employees e ON p.employee_id = e.employee_id
-JOIN payroll_periods pp ON p.period_id = pp.id
-WHERE pp.id = (SELECT id FROM payroll_periods ORDER BY start_date DESC LIMIT 1)
-ORDER BY p.ot_hours DESC;
-\`\`\`
-
-### ดึงรายละเอียด OT รายวันของพนักงาน:
-\`\`\`sql
-SELECT 
-  da.employee_id,
-  e.first_name || ' ' || e.last_name as full_name,
+  da.total_ot_hours,
   da.regular_ot_hours,
   da.sunday_ot_hours,
   da.sunday_ot_calculated,
-  da.total_ot_hours,
-  da.day1, da.day2, da.day3
+  (da.total_ot_hours * e.ot_rate) as estimated_ot_amount
 FROM daily_attendance da
 JOIN employees e ON da.employee_id = e.employee_id
-WHERE da.period_id = (SELECT id FROM payroll_periods ORDER BY start_date DESC LIMIT 1);
+JOIN payroll_periods pp ON da.period_id = pp.id
+WHERE pp.id = (SELECT id FROM payroll_periods ORDER BY start_date DESC LIMIT 1)
+ORDER BY da.total_ot_hours DESC
+LIMIT 5;
 \`\`\`
 
-### สรุปเงินเดือนตามแผนก:
+### ✅ ดึง OT ของพนักงานคนเดียว (ค้นหาด้วยชื่อ):
+\`\`\`sql
+SELECT 
+  e.employee_id,
+  e.name,
+  e.department,
+  da.total_ot_hours,
+  da.regular_ot_hours,
+  da.sunday_ot_hours,
+  da.total_work_days,
+  pp.period_name
+FROM daily_attendance da
+JOIN employees e ON da.employee_id = e.employee_id
+JOIN payroll_periods pp ON da.period_id = pp.id
+WHERE e.name LIKE '%สรรเพรญ%'
+ORDER BY pp.start_date DESC
+LIMIT 1;
+\`\`\`
+
+### ✅ สรุป OT ตามแผนก:
 \`\`\`sql
 SELECT 
   e.department,
   COUNT(DISTINCT e.employee_id) as employee_count,
-  SUM(p.base_salary) as total_base_salary,
-  SUM(p.ot_amount) as total_ot,
-  SUM(p.gross_salary) as total_gross,
-  SUM(p.net_salary) as total_net
-FROM payroll p
-JOIN employees e ON p.employee_id = e.employee_id
-WHERE p.period_id = (SELECT id FROM payroll_periods ORDER BY start_date DESC LIMIT 1)
+  SUM(da.total_ot_hours) as total_ot_hours,
+  AVG(da.total_ot_hours) as avg_ot_hours,
+  SUM(da.total_ot_hours * e.ot_rate) as estimated_total_ot_cost
+FROM daily_attendance da
+JOIN employees e ON da.employee_id = e.employee_id
+WHERE da.period_id = (SELECT id FROM payroll_periods ORDER BY start_date DESC LIMIT 1)
 GROUP BY e.department
-ORDER BY total_net DESC;
+ORDER BY total_ot_hours DESC;
+\`\`\`
+
+### ✅ นับจำนวนพนักงานในแต่ละแผนก:
+\`\`\`sql
+SELECT 
+  department,
+  COUNT(*) as employee_count
+FROM employees
+GROUP BY department
+ORDER BY employee_count DESC;
 \`\`\`
 
 ## Important Notes:
 
-### OT Calculation Rules:
-- **Regular OT (นอกเวลาธรรมดา)**: 1.5x hourly rate
-- **Sunday OT (วันอาทิตย์)**: 3.0x hourly rate
-- **Hourly rate**: base_salary / 240
-- ข้อมูล OT ที่ใช้คำนวณเงินจริง: **payroll.ot_hours**
-- รายละเอียด OT รายวัน: **daily_attendance table**
+### ⚠️ สำคัญมาก - ข้อมูล OT อยู่ที่ไหน:
+- **ไม่มี table payroll!**
+- **ข้อมูล OT ทั้งหมดอยู่ใน daily_attendance**
+- ใช้ column total_ot_hours สำหรับ OT รวม
+- ใช้ column regular_ot_hours สำหรับ OT ธรรมดา
+- ใช้ column sunday_ot_hours สำหรับ OT วันอาทิตย์ (ชั่วโมงจริง)
+- ใช้ column sunday_ot_calculated สำหรับ OT วันอาทิตย์ (คำนวณแล้ว x3)
 
-### JSONB Structure in daily_attendance:
-- Each day1-day15 contains:
-  \`\`\`json
-  {
-    "date": "2025-10-11",
-    "ot_hours": 4,
-    "actual_ot": 4,
-    "is_sunday": false
-  }
-  \`\`\`
-- **ot_hours**: ชั่วโมง OT จริง
-- **actual_ot**: ชั่วโมง OT หลังคำนวณ (วันอาทิตย์ x3)
-- **is_sunday**: true ถ้าเป็นวันอาทิตย์
+### การค้นหาชื่อพนักงาน:
+- **employees.name เป็น full name** (ไม่แยก first_name/last_name)
+- ใช้ LIKE '%ชื่อ%' สำหรับค้นหา
+- ตัวอย่าง: WHERE e.name LIKE '%สรรเพรญ%'
+- หรือ: WHERE e.name = 'สรรเพรญ เพชรสงค์'
+
+### JSONB Structure in daily_attendance (day1-day15):
+Each day column contains JSON like:
+  {"date": "2025-10-11", "ot_hours": 4, "actual_ot": 4, "is_sunday": false}
+
+- ot_hours: ชั่วโมง OT จริง
+- actual_ot: ชั่วโมง OT หลังคำนวณ (วันอาทิตย์ x3)
+- is_sunday: true ถ้าเป็นวันอาทิตย์
+
+### OT Calculation:
+- Regular OT: 1.5x (เก็บใน regular_ot_hours)
+- Sunday OT: 3.0x (เก็บใน sunday_ot_calculated)
+- Total OT: regular_ot_hours + sunday_ot_calculated = total_ot_hours
+- OT Amount (บาท): total_ot_hours * employees.ot_rate
 
 ### การ Query ข้อมูล:
-- ใช้ **JOIN employees** เพื่อดึงชื่อและแผนก
-- ใช้ **ORDER BY ... DESC LIMIT N** เพื่อดู Top N
-- ใช้ **WHERE period_id = (subquery)** เพื่อดูรอบล่าสุด
-- ใช้ **GROUP BY department** เพื่อสรุปตามแผนก
-- ใช้ **|| ' ' ||** เพื่อต่อชื่อ-นามสกุล (PostgreSQL syntax)
+- ✅ ใช้ daily_attendance สำหรับข้อมูล OT (ไม่มี table payroll)
+- ✅ ใช้ e.name สำหรับชื่อเต็ม (ไม่ใช่ first_name/last_name)
+- ✅ ใช้ JOIN employees เพื่อดึงชื่อและแผนก
+- ✅ ใช้ JOIN payroll_periods เพื่อดึงข้อมูลรอบ
+- ✅ ใช้ ORDER BY ... DESC LIMIT N เพื่อดู Top N
+- ✅ ใช้ WHERE period_id = (SELECT id FROM payroll_periods ORDER BY start_date DESC LIMIT 1) สำหรับรอบล่าสุด
+- ✅ ใช้ WHERE name LIKE '%keyword%' สำหรับค้นหาชื่อพนักงาน
 
 ### Safety Rules:
-- ห้ามใช้: DROP, DELETE, UPDATE, INSERT, TRUNCATE, ALTER
-- ใช้เฉพาะ: SELECT queries only
-- ต้องมี LIMIT สำหรับ queries ที่อาจได้ผลลัพธ์เยอะ
+- ❌ ห้ามใช้: DROP, DELETE, UPDATE, INSERT, TRUNCATE, ALTER
+- ✅ ใช้เฉพาะ: SELECT queries only
+- ✅ ต้องมี LIMIT สำหรับ queries ที่อาจได้ผลลัพธ์เยอะ (แนะนำ LIMIT 100 หรือน้อยกว่า)
+- ✅ ใช้ LIKE '%text%' สำหรับค้นหาชื่อ (เพราะเป็น full name)
 `;
