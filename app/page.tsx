@@ -607,7 +607,7 @@ export default function Dashboard() {
                 <CardContent className="pt-6">
                   <div className="space-y-3">
                     {stats.top_ot.map((emp, idx) => (
-                      <div key={emp.employee_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-green-50 transition-colors">
+                      <div key={`top-ot-${idx}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-green-50 transition-colors">
                         <div className="flex items-center gap-3">
                           <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 text-green-700 font-bold text-sm">
                             {idx + 1}
@@ -640,7 +640,7 @@ export default function Dashboard() {
                 <CardContent className="pt-6">
                   <div className="space-y-3">
                     {stats.low_ot.map((emp, idx) => (
-                      <div key={emp.employee_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors">
+                      <div key={`low-ot-${idx}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors">
                         <div className="flex items-center gap-3">
                           <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-sm">
                             {idx + 1}
@@ -727,7 +727,7 @@ export default function Dashboard() {
                   <CardContent className="pt-6">
                     <div className="space-y-3">
                       {leaveStats.top_leave.map((emp, idx) => (
-                        <div key={emp.employee_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-orange-50 transition-colors">
+                        <div key={`top-leave-${idx}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-orange-50 transition-colors">
                           <div className="flex items-center gap-3">
                             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 text-orange-700 font-bold text-sm">
                               {idx + 1}
@@ -760,7 +760,7 @@ export default function Dashboard() {
                   <CardContent className="pt-6">
                     <div className="space-y-3">
                       {leaveStats.low_leave.map((emp, idx) => (
-                        <div key={emp.employee_id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-teal-50 transition-colors">
+                        <div key={`low-leave-${idx}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-teal-50 transition-colors">
                           <div className="flex items-center gap-3">
                             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-teal-100 text-teal-700 font-bold text-sm">
                               {idx + 1}

@@ -76,27 +76,35 @@ function calculateOTAfter(
   scheduledOut: string
 ): number {
   let checkOutMin = timeToMinutes(checkOut);
-  const scheduledOutMin = timeToMinutes(scheduledOut);
+  let scheduledOutMin = timeToMinutes(scheduledOut);
+
+  // ตรวจสอบว่าเป็นกะดึกหรือไม่ (scheduled out < 12:00 หมายความว่าเป็นกะดึก)
+  const isNightShift = scheduledOutMin < 720;
 
   // ถ้าออกงานข้ามวัน
   if (checkOutDate !== checkInDate) {
-    if (checkOutMin < 720) { // ก่อน 12:00
-      checkOutMin += 1440; // +24 ชม.
+    // ถ้าเวลา check out เป็นช่วงเช้า (00:00 - 11:59)
+    if (checkOutMin < 720) {
+      checkOutMin += 1440; // เพิ่ม 24 ชม. เพื่อให้คำนวณได้ถูกต้อง
     }
   }
 
-  // ถ้ากะดึก (เวลาออกน้อยกว่า 12:00)
-  if (scheduledOutMin < 720 && scheduledOutMin > 0) {
-    const adjustedScheduledOut = scheduledOutMin + 1440;
-    if (checkOutMin <= scheduledOutMin) return 0;
-    return minutesToRoundedHours(checkOutMin - adjustedScheduledOut);
+  // ถ้าเป็นกะดึก ต้อง adjust scheduled out time
+  if (isNightShift) {
+    scheduledOutMin += 1440; // เพิ่ม 24 ชม. สำหรับกะดึก
+
+    // ถ้า checkout ยังไม่ถึง scheduled out
+    if (checkOutMin < scheduledOutMin) return 0;
+
+    return minutesToRoundedHours(checkOutMin - scheduledOutMin);
   }
 
+  // กะปกติ
   if (checkOutMin <= scheduledOutMin) return 0;
   return minutesToRoundedHours(checkOutMin - scheduledOutMin);
 }
 
-// จับคู่ scan เข้า-ออก
+// จับคู่ scan เข้า-ออก (ยึดวันที่เข้างานเป็นหลัก)
 function pairScans(scans: AttendanceScan[]): Map<string, { in: AttendanceScan | null; out: AttendanceScan | null }> {
   const sorted = [...scans].sort((a, b) => {
     const dateCompare = a.scan_date.localeCompare(b.scan_date);
@@ -105,27 +113,35 @@ function pairScans(scans: AttendanceScan[]): Map<string, { in: AttendanceScan | 
   });
 
   const pairs = new Map();
+  let lastUnpairedIn: AttendanceScan | null = null;
 
   for (let i = 0; i < sorted.length; i++) {
     const scan = sorted[i];
 
-    if (scan.scan_type === 1) {
-      const workDate = scan.scan_date;
-
-      if (!pairs.has(workDate)) {
-        pairs.set(workDate, { in: scan, out: null });
-      } else {
-        pairs.get(workDate).in = scan;
-      }
-
-      // หา scan ออกถัดไป
-      for (let j = i + 1; j < sorted.length; j++) {
-        if (sorted[j].scan_type === 2) {
-          pairs.get(workDate).out = sorted[j];
-          break;
+    if (scan.scan_type === 1) { // Scan เข้า
+      // ถ้ามี scan เข้าค้างอยู่ ให้บันทึกโดยไม่มี scan ออก
+      if (lastUnpairedIn) {
+        const workDate = lastUnpairedIn.scan_date;
+        if (!pairs.has(workDate)) {
+          pairs.set(workDate, { in: lastUnpairedIn, out: null });
         }
       }
+      lastUnpairedIn = scan;
+
+    } else if (scan.scan_type === 2) { // Scan ออก
+      if (lastUnpairedIn) {
+        // ยึดวันที่ scan เข้าเป็นหลัก (ไม่ใช่วันที่ scan ออก)
+        const workDate = lastUnpairedIn.scan_date;
+        pairs.set(workDate, { in: lastUnpairedIn, out: scan });
+        lastUnpairedIn = null;
+      }
     }
+  }
+
+  // ถ้ายังมี scan เข้าค้างอยู่ (ไม่มี scan ออก)
+  if (lastUnpairedIn) {
+    const workDate = lastUnpairedIn.scan_date;
+    pairs.set(workDate, { in: lastUnpairedIn, out: null });
   }
 
   return pairs;
@@ -198,25 +214,35 @@ export async function POST(request: NextRequest) {
 
         let otHours = 0;
 
-        if (pair?.in && pair?.out) {
+        if (pair?.in) {
           const scheduled = getScheduledTimes(pair.in.scan_time, employee.department);
           const otBefore = calculateOTBefore(pair.in.scan_time, scheduled.in);
-          const otAfter = calculateOTAfter(
-            pair.out.scan_time,
-            pair.out.scan_date,
-            pair.in.scan_date,
-            scheduled.out
-          );
+
+          let otAfter = 0;
+          if (pair.out) {
+            otAfter = calculateOTAfter(
+              pair.out.scan_time,
+              pair.out.scan_date,
+              pair.in.scan_date,
+              scheduled.out
+            );
+          }
+
           otHours = otBefore + otAfter;
+
+          // Log สำหรับ debug (ถ้ามี OT)
+          if (otHours > 0) {
+            console.log(`[${employee.employee_id}] ${dateStr}: IN=${pair.in.scan_time} OUT=${pair.out?.scan_time || 'N/A'} | Scheduled=${scheduled.in}-${scheduled.out} | OT=${otHours.toFixed(2)}hrs (Before=${otBefore}, After=${otAfter})`);
+          }
         }
 
         const actualOT = isSunday ? otHours * 3 : otHours;
 
         days.push({
           date: dateStr,
-          ot_hours: otHours,
+          ot_hours: parseFloat(otHours.toFixed(2)),
           is_sunday: isSunday,
-          actual_ot: actualOT,
+          actual_ot: parseFloat(actualOT.toFixed(2)),
         });
 
         if (otHours > 0) {

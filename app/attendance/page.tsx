@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Upload, FileText, Check, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function AttendancePage() {
+  const { t } = useLanguage();
   const [text, setText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -20,14 +22,14 @@ export default function AttendancePage() {
     reader.onload = (event) => {
       const content = event.target?.result as string;
       setText(content);
-      toast.success('อ่านไฟล์สำเร็จ');
+      toast.success(t('attendance.fileReadSuccess'));
     };
     reader.readAsText(file);
   };
 
   const handleImport = async () => {
     if (!text.trim()) {
-      toast.error('กรุณาใส่ข้อมูลการแสกน');
+      toast.error(t('attendance.enterDataError'));
       return;
     }
 
@@ -44,11 +46,11 @@ export default function AttendancePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'เกิดข้อผิดพลาด');
+        throw new Error(data.error || t('attendance.enterDataError'));
       }
 
       setResult(data);
-      toast.success(`นำเข้าข้อมูลสำเร็จ ${data.daily_records_created} รายการ`);
+      toast.success(t('attendance.recordsCreated').replace('{count}', data.daily_records_created.toString()));
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -66,10 +68,10 @@ export default function AttendancePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-          บันทึกเวลาทำงาน
+          {t('attendance.title')}
         </h1>
         <p className="mt-2 text-gray-600">
-          นำเข้าข้อมูลการแสกนเข้า-ออกงานจากเครื่องสแกนใบหน้า
+          {t('attendance.subtitle')}
         </p>
       </div>
 
@@ -77,15 +79,15 @@ export default function AttendancePage() {
         {/* Import Section */}
         <Card>
           <CardHeader>
-            <CardTitle>นำเข้าข้อมูล</CardTitle>
+            <CardTitle>{t('attendance.import')}</CardTitle>
             <CardDescription>
-              อัปโหลดไฟล์ .txt หรือวางข้อมูลด้านล่าง
+              {t('attendance.uploadDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                อัปโหลดไฟล์
+                {t('attendance.uploadFile')}
               </label>
               <div className="flex items-center gap-2">
                 <Input
@@ -100,7 +102,7 @@ export default function AttendancePage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                หรือวางข้อมูลที่นี่
+                {t('attendance.pasteHere')}
               </label>
               <textarea
                 className="w-full h-64 px-3 py-2 border border-gray-300 rounded-md font-mono text-sm text-gray-900 placeholder:text-gray-400"
@@ -115,7 +117,7 @@ export default function AttendancePage() {
               disabled={isLoading}
               className="w-full"
             >
-              {isLoading ? 'กำลังนำเข้า...' : 'นำเข้าข้อมูล'}
+              {isLoading ? t('attendance.importing') : t('attendance.importData')}
             </Button>
           </CardContent>
         </Card>
@@ -123,9 +125,9 @@ export default function AttendancePage() {
         {/* Instructions */}
         <Card>
           <CardHeader>
-            <CardTitle>รูปแบบข้อมูล</CardTitle>
+            <CardTitle>{t('attendance.dataFormat')}</CardTitle>
             <CardDescription>
-              ข้อมูลที่ได้จากเครื่องสแกนต้องมีรูปแบบดังนี้
+              {t('attendance.formatDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -136,13 +138,13 @@ export default function AttendancePage() {
             </div>
 
             <div className="space-y-2 text-sm">
-              <p className="font-semibold text-gray-900">คำอธิบายรูปแบบ:</p>
+              <p className="font-semibold text-gray-900">{t('attendance.formatExplain')}</p>
               <ul className="space-y-1 text-gray-700">
-                <li>• รหัสเครื่อง (01, 04, etc.)</li>
-                <li>• วันที่ (DD-MM-YYYY)</li>
-                <li>• เวลา (HH:MM:SS)</li>
-                <li>• รหัสพนักงาน ('20055675)</li>
-                <li>• ประเภท (1 = เข้า, 2 = ออก)</li>
+                <li>• {t('attendance.formatMachineId')}</li>
+                <li>• {t('attendance.formatDate')}</li>
+                <li>• {t('attendance.formatTime')}</li>
+                <li>• {t('attendance.formatEmpId')}</li>
+                <li>• {t('attendance.formatType')}</li>
               </ul>
             </div>
 
@@ -152,17 +154,17 @@ export default function AttendancePage() {
                   <Check className="h-5 w-5 text-green-600 mt-0.5" />
                   <div className="text-sm">
                     <p className="font-semibold text-green-900">
-                      นำเข้าสำเร็จ!
+                      {t('attendance.importSuccess')}
                     </p>
                     <p className="text-green-800 mt-1">
-                      นำเข้า {result.scans_imported} การแสกน
+                      {t('attendance.scansImported').replace('{count}', result.scans_imported.toString())}
                     </p>
                     <p className="text-green-800">
-                      สร้าง {result.daily_records_created} รายการเวลาทำงาน
+                      {t('attendance.recordsCreated').replace('{count}', result.daily_records_created.toString())}
                     </p>
                     {result.scans_skipped > 0 && (
                       <p className="text-orange-700 mt-1">
-                        ⚠️ ข้าม {result.scans_skipped} รายการ (ไม่มีรหัสพนักงานในระบบ)
+                        {t('attendance.scansSkipped').replace('{count}', result.scans_skipped.toString())}
                       </p>
                     )}
                   </div>

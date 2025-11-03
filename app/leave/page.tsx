@@ -9,6 +9,7 @@ import { DateRangePicker } from '@/components/shared/date-range-picker';
 import { Search, Plus, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Employee } from '@/lib/supabase';
+import { useLanguage } from '@/contexts/language-context';
 
 interface LeaveRecord {
   id: number;
@@ -23,6 +24,7 @@ interface LeaveRecord {
 }
 
 export default function LeavePage() {
+  const { t } = useLanguage();
   const [leaves, setLeaves] = useState<LeaveRecord[]>([]);
   const [filteredLeaves, setFilteredLeaves] = useState<LeaveRecord[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -91,7 +93,7 @@ export default function LeavePage() {
     e.preventDefault();
 
     if (!selectedEmployee || !leaveDate) {
-      toast.error('กรุณาเลือกพนักงานและวันที่ลา');
+      toast.error(t('leavePage.selectEmployeeError'));
       return;
     }
 
@@ -108,10 +110,10 @@ export default function LeavePage() {
       });
 
       if (!response.ok) {
-        throw new Error('ไม่สามารถบันทึกการลาได้');
+        throw new Error(t('leavePage.saveError'));
       }
 
-      toast.success('บันทึกการลาสำเร็จ');
+      toast.success(t('leavePage.saveSuccess'));
       fetchLeaves();
 
       // Reset form
@@ -125,7 +127,7 @@ export default function LeavePage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('ต้องการลบรายการลานี้?')) return;
+    if (!confirm(t('leavePage.deleteConfirm'))) return;
 
     try {
       const response = await fetch(`/api/leave?id=${id}`, {
@@ -133,10 +135,10 @@ export default function LeavePage() {
       });
 
       if (!response.ok) {
-        throw new Error('ไม่สามารถลบรายการลาได้');
+        throw new Error(t('leavePage.deleteError'));
       }
 
-      toast.success('ลบรายการลาสำเร็จ');
+      toast.success(t('leavePage.deleteSuccess'));
       fetchLeaves();
     } catch (error: any) {
       toast.error(error.message);
@@ -166,10 +168,10 @@ export default function LeavePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-          จัดการการลางาน
+          {t('leavePage.title')}
         </h1>
         <p className="mt-2 text-gray-600">
-          บันทึกและจัดการวันลาของพนักงาน
+          {t('leavePage.subtitle')}
         </p>
       </div>
 
@@ -177,21 +179,21 @@ export default function LeavePage() {
         {/* Add Leave Form */}
         <Card>
           <CardHeader>
-            <CardTitle>บันทึกการลา</CardTitle>
+            <CardTitle>{t('leavePage.addLeave')}</CardTitle>
             <CardDescription>
-              เลือกพนักงานและวันที่ลา
+              {t('leavePage.selectEmployee')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ค้นหาพนักงาน
+                  {t('leavePage.searchEmployee')}
                 </label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
-                    placeholder="พิมพ์ชื่อหรือรหัสพนักงาน..."
+                    placeholder={t('leavePage.searchPlaceholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -230,7 +232,7 @@ export default function LeavePage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  วันที่ลา
+                  {t('leavePage.leaveDate')}
                 </label>
                 <Input
                   type="date"
@@ -242,36 +244,36 @@ export default function LeavePage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  ประเภทการลา
+                  {t('leavePage.leaveType')}
                 </label>
                 <select
                   className="w-full h-10 px-3 border border-gray-300 rounded-md"
                   value={leaveType}
                   onChange={(e) => setLeaveType(e.target.value)}
                 >
-                  <option value="Personal">ลากิจ</option>
-                  <option value="Sick">ลาป่วย</option>
-                  <option value="Vacation">ลาพักร้อน</option>
-                  <option value="Other">อื่นๆ</option>
+                  <option value="Personal">{t('leave.typePersonal')}</option>
+                  <option value="Sick">{t('leave.typeSick')}</option>
+                  <option value="Vacation">{t('leave.typeVacation')}</option>
+                  <option value="Other">{t('leavePage.typeOther')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  เหตุผล (ไม่บังคับ)
+                  {t('leavePage.reasonOptional')}
                 </label>
                 <textarea
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   rows={3}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  placeholder="ระบุเหตุผลการลา..."
+                  placeholder={t('leavePage.reasonPlaceholder')}
                 />
               </div>
 
               <Button type="submit" className="w-full">
                 <Plus className="mr-2 h-4 w-4" />
-                บันทึกการลา
+                {t('leavePage.submit')}
               </Button>
             </form>
           </CardContent>
@@ -280,9 +282,9 @@ export default function LeavePage() {
         {/* Leave Records */}
         <Card>
           <CardHeader>
-            <CardTitle>รายการลางาน</CardTitle>
+            <CardTitle>{t('leavePage.recentLeaves')}</CardTitle>
             <CardDescription>
-              ล่าสุด 10 รายการ
+              {t('leavePage.recent10')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -316,7 +318,7 @@ export default function LeavePage() {
 
               {leaves.length === 0 && (
                 <p className="text-center text-gray-500 py-8">
-                  ยังไม่มีรายการลา
+                  {t('leavePage.noLeaveItems')}
                 </p>
               )}
             </div>
@@ -327,7 +329,7 @@ export default function LeavePage() {
       {/* All Leave Records Table */}
       <Card>
         <CardHeader>
-          <CardTitle>ประวัติการลาทั้งหมด</CardTitle>
+          <CardTitle>{t('leavePage.allLeaves')}</CardTitle>
         </CardHeader>
         <CardContent>
           {/* Date Range Filter */}
@@ -343,20 +345,20 @@ export default function LeavePage() {
               }}
             />
             <div className="text-sm text-gray-600">
-              แสดง {filteredLeaves.length} รายการ
-              {(filterStartDate || filterEndDate) && ` (จากทั้งหมด ${leaves.length} รายการ)`}
+              {t('leavePage.showingItems').replace('{count}', filteredLeaves.length.toString())}
+              {(filterStartDate || filterEndDate) && ` ${t('leavePage.outOfTotal').replace('{total}', leaves.length.toString())}`}
             </div>
           </div>
 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>วันที่ลา</TableHead>
-                <TableHead>รหัสพนักงาน</TableHead>
-                <TableHead>ชื่อ</TableHead>
-                <TableHead>แผนก</TableHead>
-                <TableHead>ประเภท</TableHead>
-                <TableHead>เหตุผล</TableHead>
+                <TableHead>{t('leave.date')}</TableHead>
+                <TableHead>{t('leave.empId')}</TableHead>
+                <TableHead>{t('leave.empName')}</TableHead>
+                <TableHead>{t('leave.department')}</TableHead>
+                <TableHead>{t('leave.type')}</TableHead>
+                <TableHead>{t('leave.reason')}</TableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -364,7 +366,7 @@ export default function LeavePage() {
               {filteredLeaves.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                    {leaves.length === 0 ? 'ไม่มีรายการลา' : 'ไม่พบรายการลาในช่วงเวลาที่เลือก'}
+                    {leaves.length === 0 ? t('leave.noLeaves') : t('leave.noLeavesInRange')}
                   </TableCell>
                 </TableRow>
               ) : (

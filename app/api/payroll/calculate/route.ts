@@ -15,15 +15,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1. คำนวณ daily attendance ก่อน
-    const dailyAttendanceResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/daily-attendance/calculate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ period_id }),
-    });
+    // 1. คำนวณ daily attendance ก่อน (สำคัญมาก!)
+    console.log(`[Payroll Calculate] Starting daily attendance calculation for period_id=${period_id}`);
 
-    if (!dailyAttendanceResponse.ok) {
-      console.error('Failed to calculate daily attendance');
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      const dailyAttendanceResponse = await fetch(`${baseUrl}/api/daily-attendance/calculate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ period_id }),
+      });
+
+      if (!dailyAttendanceResponse.ok) {
+        const errorText = await dailyAttendanceResponse.text();
+        console.error('Daily attendance calculation failed:', errorText);
+        throw new Error('Failed to calculate daily attendance');
+      }
+
+      const dailyResult = await dailyAttendanceResponse.json();
+      console.log(`[Payroll Calculate] Daily attendance calculated for ${dailyResult.employees_processed} employees`);
+    } catch (error: any) {
+      console.error('Error calling daily-attendance API:', error);
+      return NextResponse.json(
+        { error: 'Failed to calculate daily attendance: ' + error.message },
+        { status: 500 }
+      );
     }
 
     // 2. Get all employees

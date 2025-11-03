@@ -90,6 +90,32 @@ function PayrollContent() {
   const [isCalculating, setIsCalculating] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
+  // คำนวณวันสิ้นสุดอัตโนมัติ (15 วันจากวันเริ่มต้น)
+  const calculateEndDate = (start: string) => {
+    if (!start) return '';
+
+    const startDateObj = new Date(start);
+    const day = startDateObj.getDate();
+
+    // ต้องเป็นวันที่ 11 หรือ 26 เท่านั้น
+    if (day !== 11 && day !== 26) {
+      return '';
+    }
+
+    // คำนวณวันสิ้นสุด (15 วันถัดไป)
+    const endDateObj = new Date(startDateObj);
+    endDateObj.setDate(endDateObj.getDate() + 14); // +14 เพราะนับรวมวันแรก = 15 วัน
+
+    return endDateObj.toISOString().split('T')[0];
+  };
+
+  // เมื่อเปลี่ยนวันเริ่มต้น ให้คำนวณวันสิ้นสุดอัตโนมัติ
+  const handleStartDateChange = (date: string) => {
+    setStartDate(date);
+    const calculatedEndDate = calculateEndDate(date);
+    setEndDate(calculatedEndDate);
+  };
+
   useEffect(() => {
     fetchPeriods();
   }, []);
@@ -159,6 +185,19 @@ function PayrollContent() {
   const handleCreatePeriod = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Validate วันเริ่มต้นต้องเป็น 11 หรือ 26
+    const startDay = new Date(startDate).getDate();
+    if (startDay !== 11 && startDay !== 26) {
+      toast.error(t('payroll.startDateError'));
+      return;
+    }
+
+    // Validate ว่ามีวันสิ้นสุด
+    if (!endDate) {
+      toast.error(t('payroll.selectStartDateError'));
+      return;
+    }
+
     try {
       const response = await fetch('/api/payroll/periods', {
         method: 'POST',
@@ -173,10 +212,10 @@ function PayrollContent() {
       });
 
       if (!response.ok) {
-        throw new Error('ไม่สามารถสร้างรอบเงินเดือนได้');
+        throw new Error(t('payroll.createError'));
       }
 
-      toast.success('สร้างรอบเงินเดือนสำเร็จ');
+      toast.success(t('payroll.createSuccess'));
       fetchPeriods();
 
       // Reset form
@@ -204,11 +243,11 @@ function PayrollContent() {
       });
 
       if (!response.ok) {
-        throw new Error('ไม่สามารถคำนวณเงินเดือนได้');
+        throw new Error(t('payroll.calculateError'));
       }
 
       const data = await response.json();
-      toast.success(`คำนวณเงินเดือนสำเร็จ ${data.records_created} รายการ`);
+      toast.success(t('payroll.calculateSuccess').replace('{count}', data.records_created.toString()));
 
       setSelectedPeriod(period);
       fetchCalculations(period.id);
@@ -230,9 +269,9 @@ function PayrollContent() {
     <div className="space-y-4">
       {/* Compact Header */}
       <div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-xl p-4 text-white shadow-lg">
-        <h1 className="text-2xl font-bold">จัดการเงินเดือนพนักงาน</h1>
+        <h1 className="text-2xl font-bold">{t('payroll.pageTitle')}</h1>
         <p className="mt-1 text-sm text-indigo-100">
-          คำนวณและจัดการข้อมูลเงินเดือนพนักงาน
+          {t('payroll.pageSubtitle')}
         </p>
       </div>
 
@@ -245,14 +284,14 @@ function PayrollContent() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-green-600" />
-                  เงินเดือนฐาน
+                  {t('payroll.baseSalaryCard')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-gray-900">
                   {formatCurrency(totalBaseSalary)}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">ไม่รวมค่า OT</p>
+                <p className="text-xs text-gray-500 mt-1">{t('payroll.excludingOT')}</p>
               </CardContent>
             </Card>
 
@@ -260,14 +299,14 @@ function PayrollContent() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 text-blue-600" />
-                  ค่า OT รวม
+                  {t('payroll.otTotalCard')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-blue-600">
                   {formatCurrency(totalOTAmount)}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">ค่าล่วงเวลาทั้งหมด</p>
+                <p className="text-xs text-gray-500 mt-1">{t('payroll.totalOTDesc')}</p>
               </CardContent>
             </Card>
 
@@ -275,14 +314,14 @@ function PayrollContent() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-purple-600" />
-                  รวม (ก่อนหัก)
+                  {t('payroll.grossCard')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-purple-600">
                   {formatCurrency(totalGross)}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Gross Salary</p>
+                <p className="text-xs text-gray-500 mt-1">{t('finance.grossSalary')}</p>
               </CardContent>
             </Card>
 
@@ -290,14 +329,14 @@ function PayrollContent() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-orange-600" />
-                  รวม (สุทธิ)
+                  {t('payroll.netCard')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-orange-600">
                   {formatCurrency(totalNet)}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">หลังหักภาษี + ประกัน</p>
+                <p className="text-xs text-gray-500 mt-1">{t('payroll.netDesc')}</p>
               </CardContent>
             </Card>
           </div>
@@ -309,16 +348,16 @@ function PayrollContent() {
                 <div>
                   <CardTitle className="flex items-center gap-2 text-green-700">
                     <Users className="h-5 w-5" />
-                    รายการเงินเดือนพนักงาน - {selectedPeriod.period_name}
+                    {t('payroll.employeeList')} - {selectedPeriod.period_name}
                   </CardTitle>
                   <CardDescription>
-                    พนักงานทั้งหมด {calculations.length} คน
-                    {searchTerm && ` | ผลการค้นหา ${filteredCalculations.length} คน`}
+                    {t('payroll.totalEmployees').replace('{count}', calculations.length.toString())}
+                    {searchTerm && ` | ${t('payroll.searchResults').replace('{count}', filteredCalculations.length.toString())}`}
                   </CardDescription>
                 </div>
                 <Button variant="outline" className="gap-2">
                   <Download className="h-4 w-4" />
-                  ส่งออก Excel
+                  {t('payroll.exportExcel')}
                 </Button>
               </div>
             </CardHeader>
@@ -327,7 +366,7 @@ function PayrollContent() {
               <div className="mb-6">
                 <EmployeeSearch
                   onSearch={setSearchTerm}
-                  placeholder="ค้นหาด้วยชื่อหรือรหัสพนักงาน..."
+                  placeholder={t('payroll.searchByName')}
                 />
               </div>
 
@@ -399,7 +438,7 @@ function PayrollContent() {
                             </p>
                             {!searchTerm && calculations.length === 0 && (
                               <p className="text-sm text-gray-400 mt-1">
-                                กดปุ่ม "คำนวณ" เพื่อคำนวณเงินเดือนของรอบนี้
+                                {t('payroll.calculateHint')}
                               </p>
                             )}
                           </TableCell>
@@ -464,20 +503,20 @@ function PayrollContent() {
           <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50">
             <CardTitle className="flex items-center gap-2 text-indigo-700">
               <Calendar className="h-5 w-5" />
-              สร้างรอบเงินเดือน
+              {t('payroll.createPeriod')}
             </CardTitle>
             <CardDescription>
-              กำหนดรอบการจ่ายเงินเดือนใหม่
+              {t('payroll.periodSettings')}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             <form onSubmit={handleCreatePeriod} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  ชื่อรอบ
+                  {t('payroll.periodName')}
                 </label>
                 <Input
-                  placeholder="เช่น ตุลาคม 2025"
+                  placeholder={t('payroll.periodExample')}
                   value={periodName}
                   onChange={(e) => setPeriodName(e.target.value)}
                   className="h-11 border-2"
@@ -488,33 +527,39 @@ function PayrollContent() {
               <div className="space-y-3">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    วันที่เริ่มต้น
+                    {t('payroll.startDate')} <span className="text-red-500">*</span>
                   </label>
                   <Input
                     type="date"
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                    onChange={(e) => handleStartDateChange(e.target.value)}
                     className="h-11 border-2"
                     required
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {t('payroll.startDateHint')}
+                  </p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    วันที่สิ้นสุด
+                    {t('payroll.endDate')} <span className="text-blue-500">({t('payroll.autoCalculated')})</span>
                   </label>
                   <Input
                     type="date"
                     value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="h-11 border-2"
-                    required
+                    className="h-11 border-2 bg-gray-50"
+                    disabled
+                    readOnly
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    {t('payroll.endDateHint')}
+                  </p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    วันจ่ายเงิน
+                    {t('payroll.paymentDate')}
                   </label>
                   <Input
                     type="date"
@@ -528,7 +573,7 @@ function PayrollContent() {
 
               <Button type="submit" className="w-full h-11 font-semibold">
                 <Calendar className="mr-2 h-4 w-4" />
-                สร้างรอบเงินเดือน
+                {t('payroll.createPeriodBtn')}
               </Button>
             </form>
           </CardContent>
@@ -539,10 +584,10 @@ function PayrollContent() {
           <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50">
             <CardTitle className="flex items-center gap-2 text-blue-700">
               <FileText className="h-5 w-5" />
-              รอบเงินเดือนทั้งหมด
+              {t('payroll.allPeriods')}
             </CardTitle>
             <CardDescription>
-              เลือกรอบเพื่อคำนวณหรือดูรายละเอียดเงินเดือน
+              {t('payroll.selectPeriodDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
@@ -560,12 +605,12 @@ function PayrollContent() {
                     <p className="font-semibold text-base text-gray-900">{period.period_name}</p>
                     <div className="flex items-center gap-4 mt-1">
                       <p className="text-sm text-gray-600">
-                        <span className="font-medium">ระยะเวลา:</span>{' '}
+                        <span className="font-medium">{t('payroll.periodRange')}</span>{' '}
                         {new Date(period.start_date).toLocaleDateString('th-TH')} -{' '}
                         {new Date(period.end_date).toLocaleDateString('th-TH')}
                       </p>
                       <p className="text-sm text-gray-600">
-                        <span className="font-medium">จ่ายวันที่:</span>{' '}
+                        <span className="font-medium">{t('payroll.paymentOn')}</span>{' '}
                         {new Date(period.payment_date).toLocaleDateString('th-TH')}
                       </p>
                     </div>
@@ -574,8 +619,8 @@ function PayrollContent() {
                       period.status === 'approved' ? 'bg-blue-100 text-blue-700' :
                       'bg-gray-100 text-gray-700'
                     }`}>
-                      {period.status === 'paid' ? 'จ่ายแล้ว' :
-                       period.status === 'approved' ? 'อนุมัติแล้ว' : 'ร่าง'}
+                      {period.status === 'paid' ? t('payroll.statusPaid') :
+                       period.status === 'approved' ? t('payroll.statusApproved') : t('payroll.statusDraft')}
                     </span>
                   </div>
                   <div className="flex gap-2">
@@ -586,7 +631,7 @@ function PayrollContent() {
                       className="h-10"
                     >
                       <Calculator className="h-4 w-4 mr-1" />
-                      คำนวณ
+                      {t('payroll.calculate')}
                     </Button>
                     <Button
                       size="sm"
@@ -597,7 +642,7 @@ function PayrollContent() {
                       className="h-10"
                     >
                       <FileText className="h-4 w-4 mr-1" />
-                      ดูข้อมูล
+                      {t('payroll.viewData')}
                     </Button>
                   </div>
                 </div>
@@ -606,8 +651,8 @@ function PayrollContent() {
               {periods.length === 0 && (
                 <div className="text-center py-12">
                   <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 font-medium">ยังไม่มีรอบเงินเดือน</p>
-                  <p className="text-sm text-gray-400 mt-1">สร้างรอบเงินเดือนใหม่เพื่อเริ่มต้น</p>
+                  <p className="text-gray-500 font-medium">{t('payroll.noPeriods')}</p>
+                  <p className="text-sm text-gray-400 mt-1">{t('payroll.createFirstPeriod')}</p>
                 </div>
               )}
             </div>
@@ -624,7 +669,7 @@ export default function PayrollPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="text-gray-600 font-medium">กำลังโหลด...</p>
+          <p className="text-gray-600 font-medium">{/* Loading will use default during SSR */}</p>
         </div>
       </div>
     }>

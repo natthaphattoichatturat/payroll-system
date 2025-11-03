@@ -3,106 +3,109 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, FileText, Table as TableIcon } from 'lucide-react';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function ReportsPage() {
+  const { t } = useLanguage();
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-          รายงาน
+          {t('reports.title')}
         </h1>
         <p className="mt-2 text-gray-600">
-          ส่งออกและดูรายงานต่างๆ ในระบบ
+          {t('reports.subtitle')}
         </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">รายงานเวลาทำงาน</CardTitle>
+            <CardTitle className="text-lg">{t('reports.attendance')}</CardTitle>
             <CardDescription>
-              รายงานการเข้า-ออกงานของพนักงาน
+              {t('reports.attendanceDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" variant="outline">
               <Download className="mr-2 h-4 w-4" />
-              ส่งออก Excel
+              {t('reports.exportExcel')}
             </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">รายงาน OT รายเดือน</CardTitle>
+            <CardTitle className="text-lg">{t('reports.otMonthly')}</CardTitle>
             <CardDescription>
-              สรุปชั่วโมง OT ของพนักงานแต่ละคน
+              {t('reports.otMonthlyDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" variant="outline">
               <Download className="mr-2 h-4 w-4" />
-              ส่งออก Excel
+              {t('reports.exportExcel')}
             </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">รายงานเงินเดือน</CardTitle>
+            <CardTitle className="text-lg">{t('reports.payroll')}</CardTitle>
             <CardDescription>
-              รายงานเงินเดือนพนักงานรายเดือน
+              {t('reports.payrollDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" variant="outline">
               <Download className="mr-2 h-4 w-4" />
-              ส่งออก PDF
+              {t('reports.exportPDF')}
             </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">สลิปเงินเดือน</CardTitle>
+            <CardTitle className="text-lg">{t('reports.payslip')}</CardTitle>
             <CardDescription>
-              ออกสลิปเงินเดือนสำหรับพนักงาน
+              {t('reports.payslipDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" variant="outline">
               <FileText className="mr-2 h-4 w-4" />
-              สร้างสลิป PDF
+              {t('reports.createPayslip')}
             </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">รายงานการลา</CardTitle>
+            <CardTitle className="text-lg">{t('reports.leave')}</CardTitle>
             <CardDescription>
-              สรุปการลางานของพนักงาน
+              {t('reports.leaveDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" variant="outline">
               <Download className="mr-2 h-4 w-4" />
-              ส่งออก Excel
+              {t('reports.exportExcel')}
             </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">รายงานสรุปประจำปี</CardTitle>
+            <CardTitle className="text-lg">{t('reports.yearlyReport')}</CardTitle>
             <CardDescription>
-              สรุปเงินเดือนและ OT ตลอดทั้งปี
+              {t('reports.yearlyReportDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button className="w-full" variant="outline">
               <TableIcon className="mr-2 h-4 w-4" />
-              ดูรายงาน
+              {t('reports.viewReport')}
             </Button>
           </CardContent>
         </Card>
@@ -110,12 +113,12 @@ export default function ReportsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>คำแนะนำ</CardTitle>
+          <CardTitle>{t('reports.tips')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-gray-600">
-          <p>• รายงานทั้งหมดสามารถส่งออกเป็นไฟล์ Excel หรือ PDF ได้</p>
-          <p>• สลิปเงินเดือนสามารถออกเป็น PDF สำหรับส่งให้พนักงานได้</p>
-          <p>• รายงานสามารถกรองตามช่วงเวลาและแผนกได้</p>
+          <p>• {t('reports.tip1')}</p>
+          <p>• {t('reports.tip2')}</p>
+          <p>• {t('reports.tip3')}</p>
         </CardContent>
       </Card>
     </div>

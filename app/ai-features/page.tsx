@@ -1,7 +1,12 @@
+'use client';
+
 import { ChatInterface } from '@/components/ai/chat-interface';
 import { Brain, TrendingUp, FileSearch, Sparkles } from 'lucide-react';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function AIFeaturesPage() {
+  const { t } = useLanguage();
+
   return (
     <div className="space-y-6">
       {/* Page Header - AI Purple accent */}
@@ -16,7 +21,7 @@ export default function AIFeaturesPage() {
             </span>
           </div>
           <p className="text-white/90">
-            ใช้ AI เพื่อวิเคราะห์ข้อมูล ตอบคำถาม และช่วยเหลือในการใช้งานระบบ Payroll แบบอัตโนมัติ
+            {t('ai.subtitle')}
           </p>
         </div>
       </div>
@@ -32,24 +37,24 @@ export default function AIFeaturesPage() {
           <div className="bg-table-bg border border-table-border rounded-lg p-4">
             <h3 className="font-semibold text-text-primary mb-3 flex items-center gap-2 text-sm">
               <Sparkles className="h-4 w-4 text-ai-purple" />
-              คุณสมบัติ AI
+              {t('ai.capabilities')}
             </h3>
             <ul className="space-y-2 text-xs text-text-secondary">
               <li className="flex items-start gap-2">
                 <span className="text-ai-purple font-bold">•</span>
-                <span>ตอบคำถามเกี่ยวกับข้อมูลพนักงานและเงินเดือน</span>
+                <span>{t('ai.cap1')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-ai-purple font-bold">•</span>
-                <span>วิเคราะห์ข้อมูล OT และประสิทธิภาพการทำงาน</span>
+                <span>{t('ai.cap2')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-ai-purple font-bold">•</span>
-                <span>แนะนำวิธีการใช้งานระบบ</span>
+                <span>{t('ai.cap3')}</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-ai-purple font-bold">•</span>
-                <span>สร้างรายงานและสรุปข้อมูลอัตโนมัติ</span>
+                <span>{t('ai.cap4')}</span>
               </li>
             </ul>
           </div>
@@ -57,20 +62,20 @@ export default function AIFeaturesPage() {
           <div className="bg-lavender border-2 border-matcha/30 rounded-lg p-4">
             <h3 className="font-bold text-blackish mb-3 flex items-center gap-2 text-sm">
               <TrendingUp className="h-5 w-5 text-inky-blue" />
-              ตัวอย่างคำถาม
+              {t('ai.examples')}
             </h3>
             <div className="space-y-2 text-xs">
               <div className="bg-cream rounded px-3 py-2 text-blackish">
-                "พนักงานคนไหนทำ OT มากที่สุด 5 อันดับแรก?"
+                "{t('ai.example1')}"
               </div>
               <div className="bg-cream rounded px-3 py-2 text-blackish">
-                "ค่าใช้จ่ายเงินเดือนรวมของแผนก Production เท่าไหร่?"
+                "{t('ai.example2')}"
               </div>
               <div className="bg-cream rounded px-3 py-2 text-blackish">
-                "วิธีการ import ข้อมูลเวลาเข้างานทำอย่างไร?"
+                "{t('ai.example3')}"
               </div>
               <div className="bg-cream rounded px-3 py-2 text-blackish">
-                "อธิบายการคำนวณ OT ในระบบหน่อย"
+                "{t('ai.example4')}"
               </div>
             </div>
           </div>
@@ -78,12 +83,12 @@ export default function AIFeaturesPage() {
           <div className="bg-matcha/20 border-2 border-matcha rounded-lg p-4">
             <h3 className="font-bold text-blackish mb-2 flex items-center gap-2 text-sm">
               <FileSearch className="h-5 w-5 text-olive" />
-              เคล็ดลับ
+              {t('ai.tips')}
             </h3>
             <ul className="space-y-1 text-xs text-olive">
-              <li>• ถามคำถามแบบเฉพาะเจาะจงเพื่อผลลัพธ์ที่ดีขึ้น</li>
-              <li>• สามารถถามต่อเนื่องในบริบทเดียวกันได้</li>
-              <li>• AI จะจำบริบทการสนทนาก่อนหน้า</li>
+              <li>• {t('ai.tip1')}</li>
+              <li>• {t('ai.tip2')}</li>
+              <li>• {t('ai.tip3')}</li>
             </ul>
           </div>
         </div>
@@ -96,7 +101,7 @@ export default function AIFeaturesPage() {
             <TrendingUp className="h-6 w-6 text-olive" />
           </div>
           <h3 className="font-semibold text-olive mb-1 text-sm">AI Analytics</h3>
-          <p className="text-xs text-olive">เร็วๆ นี้</p>
+          <p className="text-xs text-olive">{t('ai.comingSoon')}</p>
         </div>
 
         <div className="bg-cream border-2 border-dashed border-matcha rounded-lg p-6 text-center opacity-60">
@@ -104,7 +109,7 @@ export default function AIFeaturesPage() {
             <FileSearch className="h-6 w-6 text-olive" />
           </div>
           <h3 className="font-semibold text-olive mb-1 text-sm">Smart Reports</h3>
-          <p className="text-xs text-olive">เร็วๆ นี้</p>
+          <p className="text-xs text-olive">{t('ai.comingSoon')}</p>
         </div>
 
         <div className="bg-cream border-2 border-dashed border-matcha rounded-lg p-6 text-center opacity-60">
@@ -112,7 +117,7 @@ export default function AIFeaturesPage() {
             <Sparkles className="h-6 w-6 text-olive" />
           </div>
           <h3 className="font-semibold text-olive mb-1 text-sm">Predictions</h3>
-          <p className="text-xs text-olive">เร็วๆ นี้</p>
+          <p className="text-xs text-olive">{t('ai.comingSoon')}</p>
         </div>
       </div>
     </div>

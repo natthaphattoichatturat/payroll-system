@@ -8,8 +8,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Search, UserPlus, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Employee } from '@/lib/supabase';
+import { useLanguage } from '@/contexts/language-context';
 
 export default function EmployeesPage() {
+  const { t } = useLanguage();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -25,7 +27,7 @@ export default function EmployeesPage() {
       setEmployees(data);
     } catch (error) {
       console.error('Error fetching employees:', error);
-      toast.error('ไม่สามารถโหลดข้อมูลพนักงานได้');
+      toast.error(t('employees.loadError'));
     } finally {
       setIsLoading(false);
     }
@@ -70,10 +72,10 @@ export default function EmployeesPage() {
           });
         }
 
-        toast.success(`นำเข้าพนักงาน ${employeesToImport.length} คน สำเร็จ`);
+        toast.success(t('employees.importSuccess').replace('{count}', employeesToImport.length.toString()));
         fetchEmployees();
       } catch (error) {
-        toast.error('เกิดข้อผิดพลาดในการนำเข้าข้อมูล');
+        toast.error(t('employees.importError'));
       }
     };
 
@@ -92,10 +94,10 @@ export default function EmployeesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-            จัดการพนักงาน
+            {t('employees.title')}
           </h1>
           <p className="mt-2 text-gray-600">
-            รายชื่อพนักงานทั้งหมดในระบบ
+            {t('employees.subtitle')}
           </p>
         </div>
 
@@ -103,7 +105,7 @@ export default function EmployeesPage() {
           <label htmlFor="csv-upload" className="cursor-pointer">
             <Button variant="outline" type="button">
               <Upload className="mr-2 h-4 w-4" />
-              นำเข้า CSV
+              {t('employees.importCSV')}
             </Button>
           </label>
           <input
@@ -120,9 +122,9 @@ export default function EmployeesPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>รายชื่อพนักงาน</CardTitle>
+              <CardTitle>{t('employees.list')}</CardTitle>
               <CardDescription>
-                ทั้งหมด {filteredEmployees.length} คน
+                {t('employees.totalCount').replace('{count}', filteredEmployees.length.toString())}
               </CardDescription>
             </div>
 
@@ -130,7 +132,7 @@ export default function EmployeesPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="ค้นหาพนักงาน..."
+                  placeholder={t('employees.searchPlaceholder')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -143,24 +145,24 @@ export default function EmployeesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>รหัสพนักงาน</TableHead>
-                <TableHead>ชื่อ-นามสกุล</TableHead>
-                <TableHead>แผนก</TableHead>
-                <TableHead className="text-right">เงินเดือนฐาน</TableHead>
-                <TableHead className="text-right">อัตรา OT/ชม.</TableHead>
+                <TableHead>{t('employees.employeeId')}</TableHead>
+                <TableHead>{t('employees.name')}</TableHead>
+                <TableHead>{t('employees.department')}</TableHead>
+                <TableHead className="text-right">{t('employees.baseSalary')}</TableHead>
+                <TableHead className="text-right">{t('employees.otRate')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8">
-                    กำลังโหลด...
+                    {t('employees.loading')}
                   </TableCell>
                 </TableRow>
               ) : filteredEmployees.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                    ไม่พบข้อมูลพนักงาน
+                    {t('employees.noData')}
                   </TableCell>
                 </TableRow>
               ) : (
