@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type Language = 'th' | 'en' | 'cn';
 
@@ -13,21 +13,25 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>(() => {
-    // Initialize from localStorage on client-side
-    if (typeof window !== 'undefined') {
-      const savedLanguage = localStorage.getItem('language') as Language;
-      if (savedLanguage && (savedLanguage === 'th' || savedLanguage === 'en' || savedLanguage === 'cn')) {
-        return savedLanguage;
-      }
+  // Always start with 'th' for both server and client to avoid hydration mismatch
+  const [language, setLanguageState] = useState<Language>('th');
+
+  // Load language from localStorage after component mounts (client-side only)
+  // This useEffect is necessary to avoid hydration mismatch between server and client
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('language') as Language;
+    if (savedLanguage && (savedLanguage === 'th' || savedLanguage === 'en' || savedLanguage === 'cn')) {
+      // eslint-disable-next-line
+      setLanguageState(savedLanguage);
     }
-    return 'th'; // Default to Thai
-  });
+  }, []);
 
   // Save language to localStorage when changed
-  const handleSetLanguage = (lang: Language) => {
-    setLanguage(lang);
-    localStorage.setItem('language', lang);
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('language', lang);
+    }
   };
 
   // Translation function
@@ -37,7 +41,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );
